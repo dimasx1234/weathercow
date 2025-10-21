@@ -45,7 +45,7 @@ function getPartOfDay(date: Date, sunriseMs: number | undefined, sunsetMs: numbe
 }
 
 // Small utility: format month name
-const monthName = (d) => d.toLocaleString(undefined, { month: "long", year: "numeric" });
+const monthName = (d: Date) => d.toLocaleString(undefined, { month: "long", year: "numeric" });
 
 // Calendar utility: return array of Date objects for display grid (6 weeks)
 function getMonthGrid(anchorDate: Date) {
@@ -64,7 +64,13 @@ function getMonthGrid(anchorDate: Date) {
 }
 
 // Simple button
-function Btn({ children, onClick }) {
+function Btn({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
+}) {
   return (
     <button
       onClick={onClick}
@@ -126,7 +132,7 @@ export default function WeatherCalendar() {
         const json = await res.json();
         setWeather(json);
         setStatus("ready");
-      } catch (e) {
+      } catch (e: any) {
         setErr(e.message);
         setStatus("error");
       }
@@ -135,8 +141,8 @@ export default function WeatherCalendar() {
   }, [coords]);
 
   const grid = useMemo(() => getMonthGrid(cursor), [cursor]);
-  const inMonth = (d) => d.getMonth() === cursor.getMonth();
-  const isToday = (d) => d.toDateString() === today.toDateString();
+  const inMonth = (d: Date) => d.getMonth() === cursor.getMonth();
+  const isToday = (d: Date) => d.toDateString() === today.toDateString();
 
   // Extract weather data
   const main = weather?.weather?.[0]?.main; // e.g., "Clear", "Clouds"...
