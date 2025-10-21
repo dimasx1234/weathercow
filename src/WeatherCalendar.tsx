@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 /**
  * Weather-Aware Calendar
@@ -18,8 +18,18 @@ import {
   pickDeterministic,
 } from "./weatherConfig";
 
+type Coords = { lat: number; lon: number } | null;
+type Status = "init" | "locating" | "loading" | "ready" | "error";
+type WeatherResponse = {
+  weather?: { main?: string; description?: string }[];
+  main?: { temp?: number };
+  sys?: { sunrise?: number; sunset?: number };
+  name?: string;
+};
+
+
 // Helper kept local: computes time-of-day from sunrise/sunset
-function getPartOfDay(date, sunriseMs, sunsetMs) {
+function getPartOfDay(date: Date, sunriseMs: number | undefined, sunsetMs: number | undefined) {
   const t = date.getTime();
   if (sunriseMs && sunsetMs) {
     if (t < sunriseMs) return "night";
@@ -38,7 +48,7 @@ function getPartOfDay(date, sunriseMs, sunsetMs) {
 const monthName = (d) => d.toLocaleString(undefined, { month: "long", year: "numeric" });
 
 // Calendar utility: return array of Date objects for display grid (6 weeks)
-function getMonthGrid(anchorDate) {
+function getMonthGrid(anchorDate: Date) {
   const first = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1);
   const start = new Date(first);
   const startDay = (first.getDay() + 6) % 7; // Monday=0
@@ -68,10 +78,12 @@ function Btn({ children, onClick }) {
 export default function WeatherCalendar() {
   const [today] = useState(() => new Date());
   const [cursor, setCursor] = useState(() => new Date());
-  const [coords, setCoords] = useState(null);
-  const [weather, setWeather] = useState(null);
-  const [status, setStatus] = useState("init"); // init | locating | loading | ready | error
-  const [err, setErr] = useState(null);
+  const [coords, setCoords] = useState<Coords>(null);   
+  // const [weather, setWeather] = useState(null);
+  const [weather, setWeather] = useState<WeatherResponse | null>(null);
+  const [status, setStatus] = useState<Status>("init"); ; // init | locating | loading | ready | error
+  //const [err, setErr] = useState(null);
+  const [err, setErr] = useState<string | null>(null);
 
   // Ask for geolocation (on mount)
   useEffect(() => {
@@ -87,7 +99,7 @@ export default function WeatherCalendar() {
           setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
         },
         () => {
-          setErr("Location permission denied. Using fallback (Berlin).");
+          //setErr("Location permission denied. Using fallback (Berlin).");
           setCoords({ lat: 52.52, lon: 13.405 }); // Berlin fallback
         },
         { enableHighAccuracy: true, timeout: 10000 }
@@ -102,7 +114,13 @@ export default function WeatherCalendar() {
       if (!coords || !OPENWEATHER_KEY || OPENWEATHER_KEY.includes("PASTE_")) return;
       setStatus("loading");
       try {
-        const q = new URLSearchParams({ lat: coords.lat, lon: coords.lon, units: "metric", appid: OPENWEATHER_KEY });
+        //const q = new URLSearchParams({ lat: coords.lat, lon: coords.lon, units: "metric", appid: OPENWEATHER_KEY });
+      const q = new URLSearchParams({
+      lat: String(coords.lat),
+      lon: String(coords.lon),
+      units: "metric",
+      appid: OPENWEATHER_KEY,
+      });
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?${q.toString()}`);
         if (!res.ok) throw new Error("Weather HTTP " + res.status);
         const json = await res.json();

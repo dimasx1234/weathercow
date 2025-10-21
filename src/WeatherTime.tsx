@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Simple Weather-Aware Clock
@@ -17,8 +17,17 @@ import {
   pickDeterministic,
 } from "./weatherConfig";
 
+type Coords = { lat: number; lon: number } | null;
+
+type WeatherResponse = {
+  weather?: { main?: string; description?: string }[];
+  main?: { temp?: number };
+  sys?: { sunrise?: number; sunset?: number };
+  name?: string;
+};
+
 // Helper kept local: computes time-of-day from sunrise/sunset
-function getPartOfDay(date, sunriseMs, sunsetMs) {
+function getPartOfDay(date: Date, sunriseMs: number | undefined, sunsetMs: number | undefined) {
   const t = date.getTime();
   if (sunriseMs && sunsetMs) {
     if (t < sunriseMs) return "night";
@@ -35,8 +44,10 @@ function getPartOfDay(date, sunriseMs, sunsetMs) {
 
 export default function WeatherClock() {
   const [time, setTime] = useState(new Date());
-  const [coords, setCoords] = useState(null);
-  const [weather, setWeather] = useState(null);
+  //const [coords, setCoords] = useState(null);
+  const [coords, setCoords] = useState<Coords>(null); 
+  //const [weather, setWeather] = useState(null);
+  const [weather, setWeather] = useState<WeatherResponse | null>(null);
 
   // live clock
   useEffect(() => {
@@ -57,7 +68,13 @@ export default function WeatherClock() {
   useEffect(() => {
     async function getWeather() {
       if (!coords || !OPENWEATHER_KEY || OPENWEATHER_KEY.includes("PASTE_")) return;
-      const q = new URLSearchParams({ lat: coords.lat, lon: coords.lon, units: "metric", appid: OPENWEATHER_KEY });
+      //const q = new URLSearchParams({ lat: coords.lat, lon: coords.lon, units: "metric", appid: OPENWEATHER_KEY });
+      const q = new URLSearchParams({
+      lat: String(coords.lat),
+      lon: String(coords.lon),
+      units: "metric",
+      appid: OPENWEATHER_KEY,
+      });
       const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?${q.toString()}`);
       if (res.ok) setWeather(await res.json());
     }
