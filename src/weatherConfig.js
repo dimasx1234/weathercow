@@ -3,27 +3,27 @@ export const OPENWEATHER_KEY =
   import.meta.env.VITE_OPENWEATHER_KEY || "7b9b2146c3bae897733dce1b616e7b4d";
 
 export const WEATHER_IMAGES = {
-  Clear: ["/images/beach.png", "/images/lake.png", "/images/hiking.png", "/images/summer_small.png"],
-  Clouds: ["/images/foggy.png", "/images/lake.png", "/images/fall.png"],
-  Rain: ["/images/rainy_summer.png"],
-  Drizzle: ["/images/rainy_summer.png"],
-  Thunderstorm: ["/images/rainy_summer.png"],
-  Snow: ["/images/winter.png", "/images/ski.png"],
-  Mist: ["/images/foggy.png"],
-  Fog: ["/images/foggy.png"],
-  Haze: ["/images/foggy.png"],
+  Clear: ["/weathercow/images/beach.png", "/weathercow/images/lake.png", "/weathercow/images/hiking.png", "/weathercow/images/summer_small.png"],
+  Clouds: ["/weathercow/images/foggy.png", "/weathercow/images/lake.png", "/weathercow/images/fall.png"],
+  Rain: ["/weathercow/images/rainy_summer.png"],
+  Drizzle: ["/weathercow/images/rainy_summer.png"],
+  Thunderstorm: ["/weathercow/images/rainy_summer.png"],
+  Snow: ["/weathercow/images/winter.png", "/weathercow/images/ski.png"],
+  Mist: ["/weathercow/images/foggy.png"],
+  Fog: ["/weathercow/images/foggy.png"],
+  Haze: ["/weathercow/images/foggy.png"],
 };
 
 export const SEASONAL_IMAGES = {
-  winter: ["/images/winter.png", "/images/ski.png"],   // Dec–Feb
-  spring: ["/images/spring.png", "/images/wine.png"],  // Mar–May
-  summer: ["/images/beach.png", "/images/lake.png"],   // Jun–Aug
-  autumn: ["/images/fall.png", "/images/wine.png"],    // Sep–Nov
+  winter: ["/weathercow/images/winter.png", "/weathercow/images/ski.png"],   // Dec–Feb
+  spring: ["/weathercow/images/spring.png", "/weathercow/images/wine.png"],  // Mar–May
+  summer: ["/weathercow/images/beach.png", "/weathercow/images/lake.png"],   // Jun–Aug
+  autumn: ["/weathercow/images/fall.png", "/weathercow/images/wine.png"],    // Sep–Nov
 };
 
 export const PART_OF_DAY_IMAGES = {
-  morning: "/images/morning.png",
-  night: "/images/night.png",
+  morning: "/weathercow/images/morning.png",
+  night: "/weathercow/images/night.png",
 };
 
 export function getSpecialDayImage(date) {
@@ -32,12 +32,12 @@ export function getSpecialDayImage(date) {
   const dd = String(date.getDate()).padStart(2, "0");
   const md = `${mm}-${dd}`;
 
-  if (md === "01-01") return "/images/new_year.png";           // New Year
-  if (md === "07-04") return "/images/july_4th_cow.png";       // 4th of July
+  if (md === "01-01") return "/weathercow/images/new_year.png";           // New Year
+  if (md === "07-04") return "/weathercow/images/july_4th_cow.png";       // 4th of July
   const m = date.getMonth() + 1;
   const d = date.getDate();
-  if ((m === 9 && d >= 15) || (m === 10 && d <= 5)) return "/images/oktoberfest_cow.png"; // Oktoberfest
-  if (m === 2) return "/images/carnival.png";                  // Carnival (simplified)
+  if ((m === 9 && d >= 15) || (m === 10 && d <= 5)) return "/weathercow/images/oktoberfest_cow.png"; // Oktoberfest
+  if (m === 2) return "/weathercow/images/carnival.png";                  // Carnival (simplified)
   return null;
 }
 
