@@ -1,18 +1,36 @@
 import React, { useEffect, useState } from "react";
 
 /**
- * Simple Weather‑Aware Clock
+ * Simple Weather-Aware Clock
  * ----------------------------------------------------
  * Displays the current date, time, and weather with background image.
- *
- * Setup (Vite + Tailwind):
- * - Add your OpenWeather API key below or as VITE_OPENWEATHER_KEY.
+ * Uses config from ./weatherConfig for images/holidays/seasons.
  */
 
-import { OPENWEATHER_KEY, WEATHER_BACKGROUNDS } from "./config";
+import {
+  OPENWEATHER_KEY,
+  WEATHER_IMAGES,
+  SEASONAL_IMAGES,
+  PART_OF_DAY_IMAGES,
+  getSpecialDayImage,
+  getSeason,
+  pickDeterministic,
+} from "./weatherConfig";
 
-function pickBackground(main) {
-  return WEATHER_BACKGROUNDS[main] || WEATHER_BACKGROUNDS.Clear;
+// Helper kept local: computes time-of-day from sunrise/sunset
+function getPartOfDay(date, sunriseMs, sunsetMs) {
+  const t = date.getTime();
+  if (sunriseMs && sunsetMs) {
+    if (t < sunriseMs) return "night";
+    if (t >= sunriseMs && t < sunriseMs + 2 * 60 * 60 * 1000) return "morning";
+    if (t >= sunsetMs) return "night";
+    return "day";
+  }
+  const h = date.getHours();
+  if (h < 6) return "night";
+  if (h < 10) return "morning";
+  if (h >= 20) return "night";
+  return "day";
 }
 
 export default function WeatherClock() {
@@ -46,10 +64,33 @@ export default function WeatherClock() {
     getWeather();
   }, [coords]);
 
-  const main = weather?.weather?.[0]?.main;
+  // ---- data we need for selecting background ----
+  const main = weather?.weather?.[0]?.main;        // "Clear", "Clouds", ...
   const temp = weather?.main?.temp;
   const city = weather?.name;
-  const bg = pickBackground(main);
+  const sunriseMs = weather?.sys?.sunrise ? weather.sys.sunrise * 1000 : undefined;
+  const sunsetMs  = weather?.sys?.sunset  ? weather.sys.sunset  * 1000 : undefined;
+
+  // === Part D) IMAGE SELECTION BLOCK ===
+  const special   = getSpecialDayImage(time);
+  const partOfDay = getPartOfDay(time, sunriseMs, sunsetMs);
+
+  let bg = null;
+  if (special) {
+    bg = special; // special day wins
+  } else if (partOfDay === "morning") {
+    bg = PART_OF_DAY_IMAGES.morning;
+  } else if (partOfDay === "night") {
+    bg = PART_OF_DAY_IMAGES.night;
+  } else if (main && WEATHER_IMAGES[main]) {
+    bg = pickDeterministic(WEATHER_IMAGES[main], time);
+  }
+
+  if (!bg) {
+    const season = getSeason(time);
+    bg = pickDeterministic(SEASONAL_IMAGES[season], time, 7) || "/images/beach.png";
+  }
+  // === End Part D) ===
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center text-center">
@@ -66,7 +107,7 @@ export default function WeatherClock() {
         </h2>
         {city && (
           <p className="text-lg drop-shadow-md">
-            {city} • {main} • {Math.round(temp)}°C
+            {city} • {main ?? "—"}{typeof temp === "number" ? ` • ${Math.round(temp)}°C` : ""}
           </p>
         )}
       </div>

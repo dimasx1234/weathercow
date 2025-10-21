@@ -1,32 +1,47 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 /**
- * Weather‑Aware Calendar
+ * Weather-Aware Calendar
  * ----------------------------------------------------
- * A single‑file React component that:
- * 1) Detects the user's location (via browser geolocation)
- * 2) Fetches current weather (OpenWeatherMap)
- * 3) Chooses a background image based on weather
- * 4) Renders a simple, clean month calendar
- *
- * Setup (Vite or Next.js works fine):
- * - Install TailwindCSS (https://tailwindcss.com/docs/installation)
- * - Add this component to your app and render <WeatherCalendar />
- * - Add your OpenWeather API key as an env var or inline below
- * - (Optional) Replace Unsplash URLs with your own images under /public/images/
+ * Detects location, fetches weather, and renders a month view.
+ * Background image now chosen via:
+ *   special day → time of day → weather (rotating) → seasonal fallback
  */
 
-import { OPENWEATHER_KEY, WEATHER_BACKGROUNDS } from "./config";
+import {
+  OPENWEATHER_KEY,
+  WEATHER_IMAGES,
+  SEASONAL_IMAGES,
+  PART_OF_DAY_IMAGES,
+  getSpecialDayImage,
+  getSeason,
+  pickDeterministic,
+} from "./weatherConfig";
 
+// Helper kept local: computes time-of-day from sunrise/sunset
+function getPartOfDay(date, sunriseMs, sunsetMs) {
+  const t = date.getTime();
+  if (sunriseMs && sunsetMs) {
+    if (t < sunriseMs) return "night";
+    if (t >= sunriseMs && t < sunriseMs + 2 * 60 * 60 * 1000) return "morning";
+    if (t >= sunsetMs) return "night";
+    return "day";
+  }
+  const h = date.getHours();
+  if (h < 6) return "night";
+  if (h < 10) return "morning";
+  if (h >= 20) return "night";
+  return "day";
+}
 
-// 2) Small utility: format month name
+// Small utility: format month name
 const monthName = (d) => d.toLocaleString(undefined, { month: "long", year: "numeric" });
 
-// 3) Calendar utility: return array of Date objects for display grid (6 weeks)
+// Calendar utility: return array of Date objects for display grid (6 weeks)
 function getMonthGrid(anchorDate) {
   const first = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1);
   const start = new Date(first);
-  const startDay = (first.getDay() + 6) % 7; // make Monday=0
+  const startDay = (first.getDay() + 6) % 7; // Monday=0
   start.setDate(first.getDate() - startDay);
 
   const days = [];
@@ -38,13 +53,7 @@ function getMonthGrid(anchorDate) {
   return days;
 }
 
-
-function pickBackground(main) {
-  if (!main) return WEATHER_BACKGROUNDS.Clear;
-  return WEATHER_BACKGROUNDS[main] || WEATHER_BACKGROUNDS.Clouds;
-}
-
-// 5) Simple button
+// Simple button
 function Btn({ children, onClick }) {
   return (
     <button
@@ -77,10 +86,9 @@ export default function WeatherCalendar() {
         (pos) => {
           setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
         },
-        (e) => {
+        () => {
           setErr("Location permission denied. Using fallback (Berlin).");
-          // Berlin fallback
-          setCoords({ lat: 52.52, lon: 13.405 });
+          setCoords({ lat: 52.52, lon: 13.405 }); // Berlin fallback
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
@@ -112,11 +120,33 @@ export default function WeatherCalendar() {
   const inMonth = (d) => d.getMonth() === cursor.getMonth();
   const isToday = (d) => d.toDateString() === today.toDateString();
 
+  // Extract weather data
   const main = weather?.weather?.[0]?.main; // e.g., "Clear", "Clouds"...
   const desc = weather?.weather?.[0]?.description;
   const temp = weather?.main?.temp;
   const city = weather?.name;
-  const bg = pickBackground(main);
+  const sunriseMs = weather?.sys?.sunrise ? weather.sys.sunrise * 1000 : undefined;
+  const sunsetMs  = weather?.sys?.sunset  ? weather.sys.sunset  * 1000 : undefined;
+
+  // === Background selection: special day → part of day → weather → seasonal ===
+  const special   = getSpecialDayImage(new Date());
+  const partOfDay = getPartOfDay(new Date(), sunriseMs, sunsetMs);
+
+  let bg = null;
+  if (special) {
+    bg = special; // special day wins
+  } else if (partOfDay === "morning") {
+    bg = PART_OF_DAY_IMAGES.morning;
+  } else if (partOfDay === "night") {
+    bg = PART_OF_DAY_IMAGES.night;
+  } else if (main && WEATHER_IMAGES[main]) {
+    bg = pickDeterministic(WEATHER_IMAGES[main], new Date());
+  }
+
+  if (!bg) {
+    const season = getSeason(new Date());
+    bg = pickDeterministic(SEASONAL_IMAGES[season], new Date(), 7) || "/images/beach.png";
+  }
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
@@ -133,7 +163,7 @@ export default function WeatherCalendar() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Weather‑Aware Calendar</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Weather-Aware Calendar</h1>
             <p className="text-sm text-gray-700">
               {status === "init" && "Initializing…"}
               {status === "locating" && "Detecting your location…"}
@@ -160,7 +190,7 @@ export default function WeatherCalendar() {
         {/* Month label */}
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-medium">{monthName(cursor)}</h2>
-          <div className="text-xs text-gray-600">Background adapts to current weather</div>
+          <div className="text-xs text-gray-600">Background follows special days, daytime & weather</div>
         </div>
 
         {/* Weekday headers */}
@@ -196,7 +226,7 @@ export default function WeatherCalendar() {
 
         {/* Footer */}
         <div className="mt-6 text-xs text-gray-600">
-          Tip: replace Unsplash URLs with your own images in <code>WEATHER_BACKGROUNDS</code> or host local assets in <code>/public</code>.
+          Tip: edit images & rules in <code>src/weatherConfig.js</code>, and store PNGs in <code>/public/images</code>.
         </div>
       </div>
     </div>
