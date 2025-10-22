@@ -5,7 +5,7 @@ export const asset = (file: string) =>
 export const OPENWEATHER_KEY: string =
   (import.meta as any)?.env?.VITE_OPENWEATHER_KEY ?? "7b9b2146c3bae897733dce1b616e7b4d";;
 
-export type PartOfDay = "morning" | "night";
+export type PartOfDay = "morning" | "night" | "midday" | "evening" | "earlyNight" | "lateNight";
 
 export const WEATHER_IMAGES: Record<string, string[]> = {
   Clear: [asset("beach.png"), asset("lake.png"), asset("hiking.png"), asset("summer_small.png")],
@@ -29,6 +29,10 @@ export const SEASONAL_IMAGES: Record<"winter"|"spring"|"summer"|"autumn", string
 export const PART_OF_DAY_IMAGES: Record<PartOfDay, string> = {
   morning: asset("morning.png"),
   night: asset("night.png"),
+  midday: asset("midday.png"),
+  evening: asset("evening.png"),
+  earlyNight: asset("early_night.png"),
+  lateNight: asset("late_night.png"),
 };
 
 export function getSpecialDayImage(date: Date): string | null {

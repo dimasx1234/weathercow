@@ -26,27 +26,65 @@ type WeatherResponse = {
   name?: string;
 };
 
-// Helper kept local: computes time-of-day from sunrise/sunset
-function getPartOfDay(date: Date, sunriseMs: number | undefined, sunsetMs: number | undefined) {
+type PartOfDay =
+  | "morning"
+  | "midday"
+  | "evening"
+  | "earlyNight"
+  | "lateNight"
+  | "night";
+
+// Helper: compute part-of-day using sunrise/sunset if available
+function getPartOfDay(
+  date: Date,
+  sunriseMs?: number,
+  sunsetMs?: number
+): PartOfDay {
   const t = date.getTime();
-  if (sunriseMs && sunsetMs) {
-    if (t < sunriseMs) return "night";
-    if (t >= sunriseMs && t < sunriseMs + 2 * 60 * 60 * 1000) return "morning";
-    if (t >= sunsetMs) return "night";
-    return "day";
+
+  if (sunriseMs && sunsetMs && sunriseMs < sunsetMs) {
+    const TWO_H = 2 * 60 * 60 * 1000;
+    const THREE_H = 3 * 60 * 60 * 1000;
+
+    const morningStart = sunriseMs;                 // sunrise → +2h
+    const morningEnd = sunriseMs + TWO_H;
+
+    const eveningStart = sunsetMs - THREE_H;        // -3h → sunset
+    const eveningEnd = sunsetMs;
+
+    const earlyNightStart = sunsetMs;               // sunset → +2h
+    const earlyNightEnd = sunsetMs + TWO_H;
+
+    const lateNightStart = earlyNightEnd;           // +2h after sunset → 02:00-ish (heuristic)
+    // Heuristic for "late night" end: either 02:00 or until next sunrise window; fallback 2am local
+    const next2am = new Date(date);
+    next2am.setHours(2, 0, 0, 0);
+    const lateNightEnd = Math.max(t, lateNightStart) <= next2am.getTime()
+      ? next2am.getTime()
+      : lateNightStart + TWO_H; // cheap guard if local time already past 02:00
+
+    if (t < morningStart) return "night";
+    if (t >= morningStart && t < morningEnd) return "morning";
+    if (t >= eveningStart && t < eveningEnd) return "evening";
+    if (t >= earlyNightStart && t < earlyNightEnd) return "earlyNight";
+    if (t >= lateNightStart && t < lateNightEnd) return "lateNight";
+    if (t >= morningEnd && t < eveningStart) return "midday";
+    return "night";
   }
+
+  // Fallback heuristic when sunrise/sunset not available
   const h = date.getHours();
-  if (h < 6) return "night";
+  if (h < 5) return "night";
   if (h < 10) return "morning";
-  if (h >= 20) return "night";
-  return "day";
+  if (h < 17) return "midday";
+  if (h < 20) return "evening";
+  if (h < 23) return "earlyNight";
+  return "lateNight";
 }
 
 export default function WeatherClock() {
   const [time, setTime] = useState(new Date());
-  //const [coords, setCoords] = useState(null);
-  const [coords, setCoords] = useState<Coords>(null); 
-  //const [weather, setWeather] = useState(null);
+  const [coords, setCoords] = useState<Coords>(null);
   const [weather, setWeather] = useState<WeatherResponse | null>(null);
 
   // live clock
@@ -68,15 +106,17 @@ export default function WeatherClock() {
   useEffect(() => {
     async function getWeather() {
       if (!coords || !OPENWEATHER_KEY || OPENWEATHER_KEY.includes("PASTE_")) return;
-      //const q = new URLSearchParams({ lat: coords.lat, lon: coords.lon, units: "metric", appid: OPENWEATHER_KEY });
       const q = new URLSearchParams({
-      lat: String(coords.lat),
-      lon: String(coords.lon),
-      units: "metric",
-      appid: OPENWEATHER_KEY,
+        lat: String(coords.lat),
+        lon: String(coords.lon),
+        units: "metric",
+        appid: OPENWEATHER_KEY,
       });
       const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?${q.toString()}`);
-      if (res.ok) setWeather(await res.json());
+      if (res.ok) {
+        const json = (await res.json()) as WeatherResponse;
+        setWeather(json);
+      }
     }
     getWeather();
   }, [coords]);
@@ -88,26 +128,50 @@ export default function WeatherClock() {
   const sunriseMs = weather?.sys?.sunrise ? weather.sys.sunrise * 1000 : undefined;
   const sunsetMs  = weather?.sys?.sunset  ? weather.sys.sunset  * 1000 : undefined;
 
-  // === Part D) IMAGE SELECTION BLOCK ===
-  const special   = getSpecialDayImage(time);
-  const partOfDay = getPartOfDay(time, sunriseMs, sunsetMs);
+  // === IMAGE SELECTION ===
+  const special     = getSpecialDayImage(time);
+  const partOfDay   = getPartOfDay(time, sunriseMs, sunsetMs);
 
-  let bg = null;
+  let bg: string | null = null;
+
   if (special) {
     bg = special; // special day wins
-  } else if (partOfDay === "morning") {
-    bg = PART_OF_DAY_IMAGES.morning;
-  } else if (partOfDay === "night") {
-    bg = PART_OF_DAY_IMAGES.night;
-  } else if (main && WEATHER_IMAGES[main]) {
-    bg = pickDeterministic(WEATHER_IMAGES[main], time);
+  } else {
+    // time-of-day slice first
+    switch (partOfDay) {
+      case "morning":
+        bg = PART_OF_DAY_IMAGES.morning;
+        break;
+      case "midday":
+        bg = PART_OF_DAY_IMAGES.midday;
+        break;
+      case "evening":
+        bg = PART_OF_DAY_IMAGES.evening;
+        break;
+      case "earlyNight":
+        bg = PART_OF_DAY_IMAGES.earlyNight;
+        break;
+      case "lateNight":
+        bg = PART_OF_DAY_IMAGES.lateNight;
+        break;
+      case "night":
+        bg = PART_OF_DAY_IMAGES.night;
+        break;
+    }
+
+    // then weather-based rotation if no time-of-day image (shouldn’t happen, but safe)
+    if (!bg && main && WEATHER_IMAGES[main]) {
+      bg = pickDeterministic(WEATHER_IMAGES[main], time);
+    }
   }
 
+  // seasonal fallback
   if (!bg) {
     const season = getSeason(time);
-    bg = pickDeterministic(SEASONAL_IMAGES[season], time, 7) || "/images/beach.png";
+    bg =
+      pickDeterministic(SEASONAL_IMAGES[season], time, 7) ||
+      PART_OF_DAY_IMAGES.night;
   }
-  // === End Part D) ===
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center text-center">
