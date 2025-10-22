@@ -7,6 +7,5 @@ import App2 from './WeatherCalendar.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-    <App2 />
   </StrictMode>,
 )
