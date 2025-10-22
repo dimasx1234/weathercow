@@ -1,6 +1,6 @@
 // Asset helper that respects Vite's base path (/weathercow/)
 export const asset = (file: string) =>
-  new URL(`weathercow/images/${file}`, import.meta.env.BASE_URL).href;
+  new URL(`images/${file}`, import.meta.env.BASE_URL).href;
 
 export const OPENWEATHER_KEY: string =
   (import.meta as any)?.env?.VITE_OPENWEATHER_KEY ?? "7b9b2146c3bae897733dce1b616e7b4d";;
