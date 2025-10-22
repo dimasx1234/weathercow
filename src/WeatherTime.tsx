@@ -60,7 +60,7 @@ export default function WeatherClock() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-      () => setCoords({ lat: 52.52, lon: 13.405 }) // fallback: Berlin
+      () => setCoords({ lat: 48.1374, lon: 11.5755 }) // fallback: Munich
     );
   }, []);
 

@@ -106,7 +106,7 @@ export default function WeatherCalendar() {
         },
         () => {
           //setErr("Location permission denied. Using fallback (Berlin).");
-          setCoords({ lat: 52.52, lon: 13.405 }); // Berlin fallback
+          setCoords({ lat: 48.1374, lon: 11.5755 }); // Munich fallback
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
@@ -187,7 +187,7 @@ export default function WeatherCalendar() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Weather-Aware Calendar</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Cow Calendar</h1>
             <p className="text-sm text-gray-700">
               {status === "init" && "Initializing…"}
               {status === "locating" && "Detecting your location…"}
@@ -249,9 +249,6 @@ export default function WeatherCalendar() {
         </div>
 
         {/* Footer */}
-        <div className="mt-6 text-xs text-gray-600">
-          Tip: edit images & rules in <code>src/weatherConfig.js</code>, and store PNGs in <code>/public/images</code>.
-        </div>
       </div>
     </div>
   );
