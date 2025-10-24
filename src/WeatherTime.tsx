@@ -15,13 +15,16 @@ import {
   getSpecialDayImage,
   getSeason,
   pickDeterministic,
+  WEATHER_ICON
 } from "./weatherConfig";
+import WeatherBadge from "./weatherBadge";
 
 type Coords = { lat: number; lon: number } | null;
 
 type WeatherResponse = {
-  weather?: { main?: string; description?: string }[];
-  main?: { temp?: number };
+  weather?: { main?: string; description?: string; icon?: string }[];
+  main?: { temp?: number; feels_like?: number; humidity?: number };
+  wind?: { speed?: number };
   sys?: { sunrise?: number; sunset?: number };
   name?: string;
 };
@@ -124,6 +127,13 @@ export default function WeatherClock() {
   // ---- data we need for selecting background ----
   const main = weather?.weather?.[0]?.main;        // "Clear", "Clouds", ...
   const temp = weather?.main?.temp;
+  const desc = weather?.weather?.[0]?.description ?? null;
+
+  // Option A: local icon via mapping
+  
+  const localIcon = main ? WEATHER_ICON[main] : undefined;
+  const iconUrl = localIcon;
+
   const city = weather?.name;
   const sunriseMs = weather?.sys?.sunrise ? weather.sys.sunrise * 1000 : undefined;
   const sunsetMs  = weather?.sys?.sunset  ? weather.sys.sunset  * 1000 : undefined;
@@ -191,6 +201,16 @@ export default function WeatherClock() {
             {city} • {main ?? "—"}{typeof temp === "number" ? ` • ${Math.round(temp)}°C` : ""}
           </p>
         )}
+        <div className="flex justify-center">
+        <WeatherBadge
+          iconUrl={iconUrl}
+          label={main ?? desc ?? "—"}
+          temp={typeof temp === "number" ? temp : null}
+          feelsLike={weather?.main?.feels_like ?? null}
+          wind={weather?.wind?.speed ?? null}
+          humidity={weather?.main?.humidity ?? null}
+        />
+        </div>
       </div>
     </div>
   );

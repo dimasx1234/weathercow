@@ -21,8 +21,9 @@ import {
 type Coords = { lat: number; lon: number } | null;
 type Status = "init" | "locating" | "loading" | "ready" | "error";
 type WeatherResponse = {
-  weather?: { main?: string; description?: string }[];
-  main?: { temp?: number };
+  weather?: { main?: string; description?: string; icon?: string }[];
+  main?: { temp?: number; feels_like?: number; humidity?: number };
+  wind?: { speed?: number };
   sys?: { sunrise?: number; sunset?: number };
   name?: string;
 };
@@ -130,6 +131,7 @@ export default function WeatherCalendar() {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?${q.toString()}`);
         if (!res.ok) throw new Error("Weather HTTP " + res.status);
         const json = await res.json();
+        setWeather(json);
         setWeather(json);
         setStatus("ready");
       } catch (e: any) {
