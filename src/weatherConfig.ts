@@ -116,24 +116,24 @@ export const WEATHER_IMAGES: Record<string, string[]> = weatherBuckets;
 export const SEASONAL_IMAGES: Record<SeasonName, string[]> = seasonalBuckets;
 
 export const PART_OF_DAY_IMAGES: Record<PartOfDay, string> = {
-  morning: seasonalPartMap.summer.morning ?? asset("011_summer_morning.png"),
-  midday: seasonalPartMap.summer.midday ?? asset("012_summer_midday.png"),
-  evening: seasonalPartMap.summer.evening ?? asset("013_summer_evening.png"),
-  earlyNight: seasonalPartMap.summer.earlyNight ?? asset("014_summer_early_night.png"),
-  lateNight: seasonalPartMap.summer.lateNight ?? asset("015_summer_late_night.png"),
-  night: asset("night.png"),
+  morning: seasonalPartMap.summer.morning ?? asset("011_season_summer_morning.png"),
+  midday: seasonalPartMap.summer.midday ?? asset("012_season_summer_midday.png"),
+  evening: seasonalPartMap.summer.evening ?? asset("013_season_summer_evening.png"),
+  earlyNight: seasonalPartMap.summer.earlyNight ?? asset("014_season_summer_early_night.png"),
+  lateNight: seasonalPartMap.summer.lateNight ?? asset("015_season_summer_late_night.png"),
+  night: asset("046_season_winter_night_default.png"),
 };
 
 export const WEATHER_ICON: Record<string, string> = {
-  Clear: WEATHER_IMAGES.Clear[0] ?? asset("099_beach.png"),
-  Clouds: WEATHER_IMAGES.Clouds[0] ?? asset("080_clouds.png"),
-  Rain: WEATHER_IMAGES.Rain[0] ?? asset("082_rain.png"),
-  Drizzle: WEATHER_IMAGES.Drizzle[0] ?? asset("082_rain.png"),
-  Thunderstorm: WEATHER_IMAGES.Thunderstorm[0] ?? asset("083_thunderstorm.png"),
-  Snow: WEATHER_IMAGES.Snow[0] ?? asset("099_ski.png"),
-  Mist: WEATHER_IMAGES.Mist[0] ?? asset("081_foggy.png"),
-  Fog: WEATHER_IMAGES.Fog[0] ?? asset("081_foggy.png"),
-  Haze: WEATHER_IMAGES.Haze[0] ?? asset("081_foggy.png"),
+  Clear: WEATHER_IMAGES.Clear[0] ?? asset("090_vacation_summer_beach.png"),
+  Clouds: WEATHER_IMAGES.Clouds[0] ?? asset("080_weather_clouds_default.png"),
+  Rain: WEATHER_IMAGES.Rain[0] ?? asset("082_weather_rain_default.png"),
+  Drizzle: WEATHER_IMAGES.Drizzle[0] ?? asset("082_weather_rain_default.png"),
+  Thunderstorm: WEATHER_IMAGES.Thunderstorm[0] ?? asset("084_weather_thunderstorm_default.png"),
+  Snow: WEATHER_IMAGES.Snow[0] ?? asset("093_vacation_winter_ski.png"),
+  Mist: WEATHER_IMAGES.Mist[0] ?? asset("081_weather_fog_default.png"),
+  Fog: WEATHER_IMAGES.Fog[0] ?? asset("081_weather_fog_default.png"),
+  Haze: WEATHER_IMAGES.Haze[0] ?? asset("081_weather_fog_default.png"),
 };
 
 export function getSpecialDayImage(date: Date): string | null {
@@ -142,20 +142,20 @@ export function getSpecialDayImage(date: Date): string | null {
   const dd = String(date.getDate()).padStart(2, "0");
   const md = `${mm}-${dd}`;
 
-  if (md === "01-01") return asset("099_new_year.png");
-  if (md === "07-04") return asset("099_july_4th_cow.png");
-  if (md === "10-31") return asset("099_halloween.png");
-  if (md === "12-25") return asset("099_christmas_cow.png");
+  if (md === "01-01") return asset("107_special_new_year_global.png");
+  if (md === "07-04") return asset("106_special_independence_day_us.png");
+  if (md === "10-31") return asset("105_special_halloween_global.png");
+  if (md === "12-25") return asset("102_special_christmas_global.png");
 
   const m = date.getMonth() + 1;
   const d = date.getDate();
-  if ((m === 9 && d >= 15) || (m === 10 && d <= 5)) return asset("099_oktoberfest_cow.png");
-  if (m === 2) return asset("099_carnival.png");
+  if ((m === 9 && d >= 15) || (m === 10 && d <= 5)) return asset("108_special_oktoberfest_by.png");
+  if (m === 2) return asset("100_special_carnival_global.png");
 
-  if (md === "02-10" && yyyy === 2026) return asset("099_chinese_new_year.png");
-  if (md === "04-05" && yyyy === 2026) return asset("099_easter_cow.png");
-  if (md === "04-02" && yyyy === 2026) return asset("099_passover_cow.png");
-  if (md === "10-27" || md === "10-28" || md === "10-29") return asset("099_exida_symposium.png");
+  if (md === "02-10" && yyyy === 2026) return asset("101_special_chinese_new_year_global.png");
+  if (md === "04-05" && yyyy === 2026) return asset("103_special_easter_global.png");
+  if (md === "04-02" && yyyy === 2026) return asset("109_special_passover_global.png");
+  if (md === "10-27" || md === "10-28" || md === "10-29") return asset("104_special_exida_symposium_global.png");
 
   return null;
 }

@@ -1,0 +1,52 @@
+# region|title|start|end
+# Bavaria (Germany) bank/public holidays
+BY|New Year's Day|2026-01-01|2026-01-01
+BY|Epiphany|2026-01-06|2026-01-06
+BY|Good Friday|2026-04-03|2026-04-03
+BY|Easter Monday|2026-04-06|2026-04-06
+BY|Labour Day|2026-05-01|2026-05-01
+BY|Ascension Day|2026-05-14|2026-05-14
+BY|Whit Monday|2026-05-25|2026-05-25
+BY|Corpus Christi|2026-06-04|2026-06-04
+BY|Assumption Day|2026-08-15|2026-08-15
+BY|German Unity Day|2026-10-03|2026-10-03
+BY|All Saints' Day|2026-11-01|2026-11-01
+BY|Christmas Day|2026-12-25|2026-12-25
+BY|Second Day of Christmas|2026-12-26|2026-12-26
+BY|New Year's Day|2027-01-01|2027-01-01
+BY|Epiphany|2027-01-06|2027-01-06
+BY|Good Friday|2027-03-26|2027-03-26
+BY|Easter Monday|2027-03-29|2027-03-29
+BY|Labour Day|2027-05-01|2027-05-01
+BY|Ascension Day|2027-05-06|2027-05-06
+BY|Whit Monday|2027-05-17|2027-05-17
+BY|Corpus Christi|2027-05-27|2027-05-27
+BY|Assumption Day|2027-08-15|2027-08-15
+BY|German Unity Day|2027-10-03|2027-10-03
+BY|All Saints' Day|2027-11-01|2027-11-01
+BY|Christmas Day|2027-12-25|2027-12-25
+BY|Second Day of Christmas|2027-12-26|2027-12-26
+
+# United States federal bank holidays (observed dates)
+US|New Year's Day|2026-01-01|2026-01-01
+US|Martin Luther King Jr. Day|2026-01-19|2026-01-19
+US|Washington's Birthday|2026-02-16|2026-02-16
+US|Memorial Day|2026-05-25|2026-05-25
+US|Juneteenth National Independence Day|2026-06-19|2026-06-19
+US|Independence Day (Observed)|2026-07-03|2026-07-03
+US|Labor Day|2026-09-07|2026-09-07
+US|Columbus Day|2026-10-12|2026-10-12
+US|Veterans Day|2026-11-11|2026-11-11
+US|Thanksgiving Day|2026-11-26|2026-11-26
+US|Christmas Day|2026-12-25|2026-12-25
+US|New Year's Day|2027-01-01|2027-01-01
+US|Martin Luther King Jr. Day|2027-01-18|2027-01-18
+US|Washington's Birthday|2027-02-15|2027-02-15
+US|Memorial Day|2027-05-31|2027-05-31
+US|Juneteenth National Independence Day (Observed)|2027-06-18|2027-06-18
+US|Independence Day (Observed)|2027-07-05|2027-07-05
+US|Labor Day|2027-09-06|2027-09-06
+US|Columbus Day|2027-10-11|2027-10-11
+US|Veterans Day|2027-11-11|2027-11-11
+US|Thanksgiving Day|2027-11-25|2027-11-25
+US|Christmas Day (Observed)|2027-12-24|2027-12-24
