@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { OPENWEATHER_KEY, selectBackgroundImage } from "./weatherConfig";
+import { APP_SETTINGS } from "./appSettings";
+import BackgroundDebugPanel from "./BackgroundDebugPanel";
+import { OPENWEATHER_KEY, selectBackgroundImageDetails } from "./weatherConfig";
 
 type Coords = { lat: number; lon: number } | null;
 type Status = "init" | "locating" | "loading" | "ready" | "error";
@@ -103,12 +105,14 @@ export default function WeatherCalendar() {
   const sunriseMs = weather?.sys?.sunrise ? weather.sys.sunrise * 1000 : undefined;
   const sunsetMs = weather?.sys?.sunset ? weather.sys.sunset * 1000 : undefined;
 
-  const bg = selectBackgroundImage({
+  const selection = selectBackgroundImageDetails({
     now: new Date(),
     weatherMain: main,
     sunriseMs,
     sunsetMs,
+    strategy: APP_SETTINGS.calendarStrategy,
   });
+  const bg = selection.image;
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
@@ -179,6 +183,7 @@ export default function WeatherCalendar() {
           })}
         </div>
       </div>
+      <BackgroundDebugPanel selection={selection} now={new Date()} />
     </div>
   );
 }

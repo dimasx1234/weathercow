@@ -91,6 +91,9 @@ for (const file of IMAGE_FILES) {
       seasonalPartMap[season][part] = url;
     }
   }
+  if (/wine/.test(file)) {
+    pushUnique(seasonalBuckets.autumn, url);
+  }
 
   if (/beach|lake|hiking/.test(file)) pushUnique(weatherBuckets.Clear, url);
   if (/cloud/.test(file)) pushUnique(weatherBuckets.Clouds, url);
@@ -217,19 +220,127 @@ export function selectBackgroundImage(input: {
   weatherMain?: string;
   sunriseMs?: number;
   sunsetMs?: number;
+  strategy?: BackgroundSelectionStrategy;
 }): string {
-  const { now, weatherMain, sunriseMs, sunsetMs } = input;
+  return selectBackgroundImageDetails(input).image;
+}
+
+export type BackgroundSelectionReason =
+  | "special_day"
+  | "part_of_day"
+  | "weather"
+  | "seasonal_fallback"
+  | "night_fallback";
+
+export type BackgroundSelectionStrategy = "weather-first" | "season-time-first";
+
+export type BackgroundSelection = {
+  image: string;
+  imageFile: string;
+  reason: BackgroundSelectionReason;
+  strategy: BackgroundSelectionStrategy;
+  season: SeasonName;
+  partOfDay: PartOfDay;
+  weatherMain?: string;
+};
+
+function imageFileFromUrl(imageUrl: string): string {
+  const clean = imageUrl.split("?")[0];
+  const idx = clean.lastIndexOf("/");
+  return idx >= 0 ? clean.slice(idx + 1) : clean;
+}
+
+export function selectBackgroundImageDetails(input: {
+  now: Date;
+  weatherMain?: string;
+  sunriseMs?: number;
+  sunsetMs?: number;
+  strategy?: BackgroundSelectionStrategy;
+}): BackgroundSelection {
+  const { now, weatherMain, sunriseMs, sunsetMs, strategy = "season-time-first" } = input;
+  const season = getSeason(now);
+  const partOfDay = getPartOfDay(now, sunriseMs, sunsetMs);
   const special = getSpecialDayImage(now);
-  if (special) return special;
-
-  const dayPartImage = getPartOfDayImage(now, sunriseMs, sunsetMs);
-  if (dayPartImage) return dayPartImage;
-
-  if (weatherMain) {
-    const weatherPick = pickDeterministic(WEATHER_IMAGES[weatherMain], now);
-    if (weatherPick) return weatherPick;
+  if (special) {
+    return {
+      image: special,
+      imageFile: imageFileFromUrl(special),
+      reason: "special_day",
+      strategy,
+      season,
+      partOfDay,
+      weatherMain,
+    };
   }
 
-  const season = getSeason(now);
-  return pickDeterministic(SEASONAL_IMAGES[season], now, 7) ?? PART_OF_DAY_IMAGES.night;
+  const tryWeather = (): BackgroundSelection | null => {
+    if (!weatherMain) return null;
+    const weatherPick = pickDeterministic(WEATHER_IMAGES[weatherMain], now);
+    if (!weatherPick) return null;
+    return {
+      image: weatherPick,
+      imageFile: imageFileFromUrl(weatherPick),
+      reason: "weather",
+      strategy,
+      season,
+      partOfDay,
+      weatherMain,
+    };
+  };
+
+  const tryPartOfDay = (): BackgroundSelection => {
+    const dayPartImage = getPartOfDayImage(now, sunriseMs, sunsetMs);
+    return {
+      image: dayPartImage,
+      imageFile: imageFileFromUrl(dayPartImage),
+      reason: "part_of_day",
+      strategy,
+      season,
+      partOfDay,
+      weatherMain,
+    };
+  };
+
+  const trySeasonal = (): BackgroundSelection | null => {
+    const seasonPick = pickDeterministic(SEASONAL_IMAGES[season], now, 7);
+    if (!seasonPick) return null;
+    return {
+      image: seasonPick,
+      imageFile: imageFileFromUrl(seasonPick),
+      reason: "seasonal_fallback",
+      strategy,
+      season,
+      partOfDay,
+      weatherMain,
+    };
+  };
+
+  if (strategy === "weather-first") {
+    return tryWeather() ?? tryPartOfDay() ?? trySeasonal() ?? {
+      image: PART_OF_DAY_IMAGES.night,
+      imageFile: imageFileFromUrl(PART_OF_DAY_IMAGES.night),
+      reason: "night_fallback",
+      strategy,
+      season,
+      partOfDay,
+      weatherMain,
+    };
+  }
+
+  const seasonTimeSelection = tryPartOfDay();
+  if (seasonTimeSelection) return seasonTimeSelection;
+  const lateSeasonal = trySeasonal();
+  if (lateSeasonal) return lateSeasonal;
+  const lateWeather = tryWeather();
+  if (lateWeather) return lateWeather;
+
+  return {
+    image: PART_OF_DAY_IMAGES.night,
+    imageFile: imageFileFromUrl(PART_OF_DAY_IMAGES.night),
+    reason: "night_fallback",
+    strategy,
+    season,
+    partOfDay,
+    weatherMain,
+  };
 }

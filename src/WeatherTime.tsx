@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { OPENWEATHER_KEY, selectBackgroundImage } from "./weatherConfig";
+import BackgroundDebugPanel from "./BackgroundDebugPanel";
+import { APP_SETTINGS } from "./appSettings";
+import { OPENWEATHER_KEY, selectBackgroundImageDetails } from "./weatherConfig";
 
 type Coords = { lat: number; lon: number } | null;
 
@@ -53,12 +55,14 @@ export default function WeatherClock() {
   const sunriseMs = weather?.sys?.sunrise ? weather.sys.sunrise * 1000 : undefined;
   const sunsetMs = weather?.sys?.sunset ? weather.sys.sunset * 1000 : undefined;
 
-  const bg = selectBackgroundImage({
+  const selection = selectBackgroundImageDetails({
     now: time,
     weatherMain: main,
     sunriseMs,
     sunsetMs,
+    strategy: APP_SETTINGS.weatherClockStrategy,
   });
+  const bg = selection.image;
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center text-center">
@@ -83,6 +87,7 @@ export default function WeatherClock() {
           </p>
         )}
       </div>
+      <BackgroundDebugPanel selection={selection} now={time} />
     </div>
   );
 }
