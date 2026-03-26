@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { APP_SETTINGS } from "./appSettings";
 import { asset, getSeasonalImage, getSpecialDayImage, pickDeterministic } from "./weatherConfig";
 
@@ -27,12 +27,7 @@ function specialBadgeClass(): string {
 function RegionFlag({ region }: { region: Region }) {
   if (region === "US") {
     return (
-      <svg
-        className="inline-block h-3.5 w-5 align-[-2px]"
-        viewBox="0 0 19 10"
-        role="img"
-        aria-label="United States flag"
-      >
+      <svg className="inline-block h-3.5 w-5 align-[-2px]" viewBox="0 0 19 10" role="img" aria-label="United States flag">
         <rect width="19" height="10" fill="#b22234" />
         <rect y="1" width="19" height="1" fill="#fff" />
         <rect y="3" width="19" height="1" fill="#fff" />
@@ -65,12 +60,7 @@ function RegionFlag({ region }: { region: Region }) {
   }
 
   return (
-    <svg
-      className="inline-block h-3.5 w-5 align-[-2px]"
-      viewBox="0 0 15 9"
-      role="img"
-      aria-label="Germany flag"
-    >
+    <svg className="inline-block h-3.5 w-5 align-[-2px]" viewBox="0 0 15 9" role="img" aria-label="Germany flag">
       <rect width="15" height="3" fill="#000" />
       <rect y="3" width="15" height="3" fill="#dd0000" />
       <rect y="6" width="15" height="3" fill="#ffce00" />
@@ -164,6 +154,11 @@ export default function HolidayCalendar() {
   const pageBgOpacity = Math.min(1, Math.max(0, APP_SETTINGS.calendarPageBackgroundOpacity));
   const tileBgOpacity = Math.min(1, Math.max(0, APP_SETTINGS.calendarTileImageOpacity));
   const tileOverlayOpacity = Math.min(1, Math.max(0, APP_SETTINGS.calendarTileOverlayOpacity));
+  const printVars = {
+    "--print-tile-bg-opacity": Math.min(1, Math.max(0, APP_SETTINGS.calendarPrintTileImageOpacity)),
+    "--print-tile-overlay-opacity": Math.min(1, Math.max(0, APP_SETTINGS.calendarPrintTileOverlayOpacity)),
+    "--print-tile-min-height": `${Math.max(56, APP_SETTINGS.calendarPrintTileMinHeightPx)}px`,
+  } as CSSProperties;
 
   useEffect(() => {
     async function loadResources() {
@@ -223,26 +218,27 @@ export default function HolidayCalendar() {
   }, [filteredEvents, month, year]);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-stone-100 text-slate-900">
-      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${pageBg})`, opacity: pageBgOpacity }} />
-      <div className="absolute inset-0 bg-stone-100/78" />
+    <div className="calendar-print-root relative min-h-screen w-full overflow-hidden bg-stone-100 text-slate-900" style={printVars}>
+      <div className="calendar-page-bg absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${pageBg})`, opacity: pageBgOpacity }} />
+      <div className="calendar-page-overlay absolute inset-0 bg-stone-100/78" />
 
-      <div className="relative z-10 max-w-6xl mx-auto p-6">
+      <div className="relative z-10 max-w-6xl mx-auto p-6 calendar-print-content">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <div>
+          <div className="calendar-print-titleblock">
             <h2 className="text-3xl font-semibold">Calendar: Holidays & School Vacations</h2>
             <p className="text-sm text-slate-700">Sources: BY/US resource files (holidays, vacations, special-days)</p>
           </div>
-          <div className="flex gap-2">
+          <div className="calendar-print-controls flex gap-2">
             <button className="px-3 py-1 rounded-xl border bg-white" onClick={() => setCursor(new Date(year, month - 1, 1))}>Prev</button>
             <button className="px-3 py-1 rounded-xl border bg-white" onClick={() => setCursor(new Date())}>Today</button>
             <button className="px-3 py-1 rounded-xl border bg-white" onClick={() => setCursor(new Date(year, month + 1, 1))}>Next</button>
+            <button className="px-3 py-1 rounded-xl border bg-white" onClick={() => window.print()}>Print to PDF</button>
           </div>
         </div>
 
         <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="text-lg font-medium">{cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</div>
-          <div className="flex items-center gap-3 text-sm">
+          <div className="calendar-print-month text-lg font-medium">{cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</div>
+          <div className="calendar-print-controls flex items-center gap-3 text-sm">
             <label className="inline-flex items-center gap-1">
               <input type="checkbox" checked={showBY} onChange={(e) => setShowBY(e.target.checked)} />
               <span>Bavaria (BY)</span>
@@ -266,7 +262,7 @@ export default function HolidayCalendar() {
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1 calendar-grid">
           {grid.map((d) => {
             const inMonth = d.getMonth() === month;
             const isToday = d.toDateString() === today.toDateString();
@@ -307,15 +303,15 @@ export default function HolidayCalendar() {
               <div
                 key={d.toISOString()}
                 className={
-                  "relative min-h-28 rounded-xl border p-2 bg-white flex flex-col gap-1 overflow-hidden " +
+                  "calendar-day-tile relative min-h-28 rounded-xl border p-2 bg-white flex flex-col gap-1 overflow-hidden " +
                   holidayFrameClass + " " +
                   (inMonth ? "" : "opacity-50 ") +
                   (isToday ? "outline outline-2 outline-slate-900 " : "")
                 }
               >
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${tileBg})`, opacity: tileBgOpacity }} />
+                <div className="calendar-tile-bg absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${tileBg})`, opacity: tileBgOpacity }} />
                 {tileHolidayTint && <div className={`absolute inset-0 ${tileHolidayTint}`} />}
-                <div className="absolute inset-0 bg-white" style={{ opacity: tileOverlayOpacity }} />
+                <div className="calendar-tile-overlay absolute inset-0 bg-white" style={{ opacity: tileOverlayOpacity }} />
 
                 <div className="relative z-10 flex flex-col gap-1">
                   <div className="text-sm font-semibold">{d.getDate()}</div>
@@ -345,7 +341,7 @@ export default function HolidayCalendar() {
           })}
         </div>
 
-        <section className="mt-6">
+        <section className="mt-6 calendar-month-list">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-2">This Month</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {monthEvents.map((e) => (
@@ -371,4 +367,3 @@ export default function HolidayCalendar() {
     </div>
   );
 }
-

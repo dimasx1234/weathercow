@@ -8,4 +8,7 @@ export const APP_SETTINGS = {
   calendarPageBackgroundOpacity: 0.12,
   calendarTileImageOpacity: 0.8,
   calendarTileOverlayOpacity: 0.3,
+  calendarPrintTileImageOpacity: 0.62,
+  calendarPrintTileOverlayOpacity: 0.26,
+  calendarPrintTileMinHeightPx: 86,
 } as const;

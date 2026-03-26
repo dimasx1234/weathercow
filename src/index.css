@@ -1,1 +1,90 @@
 @import "tailwindcss";
+
+@page {
+  size: A4 landscape;
+  margin: 8mm;
+}
+
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #root > * {
+    display: none !important;
+  }
+
+  #root > .calendar-print-root {
+    display: block !important;
+  }
+
+  .calendar-print-root {
+    position: static !important;
+    width: 100%;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  .calendar-print-controls {
+    display: none !important;
+  }
+
+  .calendar-page-bg,
+  .calendar-page-overlay,
+  .calendar-month-list,
+  .calendar-print-titleblock {
+    display: none !important;
+  }
+
+  .calendar-print-content {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .calendar-print-month {
+    margin-bottom: 2px !important;
+    font-size: 16px !important;
+    line-height: 1.1 !important;
+  }
+
+  .calendar-grid {
+    gap: 2px !important;
+  }
+
+  .calendar-day-tile {
+    min-height: var(--print-tile-min-height, 86px) !important;
+    padding: 2px !important;
+    border-radius: 6px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .calendar-day-tile .text-sm {
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+  }
+
+  .calendar-day-tile .text-\[10px\] {
+    font-size: 8px !important;
+    line-height: 1.05 !important;
+    padding: 1px 3px !important;
+  }
+
+  .calendar-tile-bg {
+    opacity: var(--print-tile-bg-opacity, 0.62) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .calendar-tile-overlay {
+    opacity: var(--print-tile-overlay-opacity, 0.26) !important;
+  }
+}
