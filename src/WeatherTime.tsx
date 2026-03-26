@@ -1,22 +1,5 @@
 import { useEffect, useState } from "react";
-
-/**
- * Simple Weather-Aware Clock
- * ----------------------------------------------------
- * Displays the current date, time, and weather with background image.
- * Uses config from ./weatherConfig for images/holidays/seasons.
- */
-
-import {
-  OPENWEATHER_KEY,
-  WEATHER_IMAGES,
-  SEASONAL_IMAGES,
-  PART_OF_DAY_IMAGES,
-    getSeason,
-  pickDeterministic,
-  //WEATHER_ICON
-} from "./weatherConfig";
-//import WeatherBadge from "./weatherBadge";
+import { OPENWEATHER_KEY, selectBackgroundImage } from "./weatherConfig";
 
 type Coords = { lat: number; lon: number } | null;
 
@@ -28,28 +11,24 @@ type WeatherResponse = {
   name?: string;
 };
 
-
 export default function WeatherClock() {
   const [time, setTime] = useState(new Date());
   const [coords, setCoords] = useState<Coords>(null);
   const [weather, setWeather] = useState<WeatherResponse | null>(null);
 
-  // live clock
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // get location
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-      () => setCoords({ lat: 48.1374, lon: 11.5755 }) // fallback: Munich
+      () => setCoords({ lat: 48.1374, lon: 11.5755 })
     );
   }, []);
 
-  // fetch weather
   useEffect(() => {
     async function getWeather() {
       if (!coords || !OPENWEATHER_KEY || OPENWEATHER_KEY.includes("PASTE_")) return;
@@ -68,42 +47,21 @@ export default function WeatherClock() {
     getWeather();
   }, [coords]);
 
-  // ---- data we need for selecting background ----
-  const main = weather?.weather?.[0]?.main;        // "Clear", "Clouds", ...
+  const main = weather?.weather?.[0]?.main;
   const temp = weather?.main?.temp;
-  //const desc = weather?.weather?.[0]?.description ?? null;
-
-  // Option A: local icon via mapping
-  //const localIcon = main ? WEATHER_ICON[main] : undefined;
-  //const iconUrl = localIcon;
-
   const city = weather?.name;
-  //const sunriseMs = weather?.sys?.sunrise ? weather.sys.sunrise * 1000 : undefined;
-  //const sunsetMs  = weather?.sys?.sunset  ? weather.sys.sunset  * 1000 : undefined;
+  const sunriseMs = weather?.sys?.sunrise ? weather.sys.sunrise * 1000 : undefined;
+  const sunsetMs = weather?.sys?.sunset ? weather.sys.sunset * 1000 : undefined;
 
-  // === IMAGE SELECTION ===
-  //const special     = getSpecialDayImage(time);
-  //const partOfDay   = getPartOfDay(time, sunriseMs, sunsetMs);
-
-  let bg: string | null = null;
-
-      // then weather-based rotation if no time-of-day image (shouldn’t happen, but safe)
-    if (!bg && main && WEATHER_IMAGES[main]) {
-      bg = pickDeterministic(WEATHER_IMAGES[main], time);
-    }
-  
-
-  // seasonal fallback
-  if (!bg) {
-    const season = getSeason(time);
-    bg =
-      pickDeterministic(SEASONAL_IMAGES[season], time, 7) ||
-      PART_OF_DAY_IMAGES.night;
-  }
+  const bg = selectBackgroundImage({
+    now: time,
+    weatherMain: main,
+    sunriseMs,
+    sunsetMs,
+  });
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center text-center">
-      {/* background */}
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${bg})` }} />
       <div className="absolute inset-0 bg-black/30" />
 
@@ -124,7 +82,6 @@ export default function WeatherClock() {
             {typeof weather?.wind?.speed === "number" && ` • ${Math.round(weather.wind.speed * 3.6)} km/h`}
           </p>
         )}
-
       </div>
     </div>
   );
