@@ -137,26 +137,7 @@ export const WEATHER_ICON: Record<string, string> = {
 };
 
 export function getSpecialDayImage(date: Date): string | null {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  const md = `${mm}-${dd}`;
-
-  if (md === "01-01") return asset("107_special_new_year_global.png");
-  if (md === "07-04") return asset("106_special_independence_day_us.png");
-  if (md === "10-31") return asset("105_special_halloween_global.png");
-  if (md === "12-25") return asset("102_special_christmas_global.png");
-
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-  if ((m === 9 && d >= 15) || (m === 10 && d <= 5)) return asset("108_special_oktoberfest_by.png");
-  if (m === 2) return asset("100_special_carnival_global.png");
-
-  if (md === "02-10" && yyyy === 2026) return asset("101_special_chinese_new_year_global.png");
-  if (md === "04-05" && yyyy === 2026) return asset("103_special_easter_global.png");
-  if (md === "04-02" && yyyy === 2026) return asset("109_special_passover_global.png");
-  if (md === "10-27" || md === "10-28" || md === "10-29") return asset("104_special_exida_symposium_global.png");
-
+  void date;
   return null;
 }
 

@@ -24,13 +24,63 @@ function specialBadgeClass(): string {
   return "bg-fuchsia-100 text-fuchsia-900 border border-fuchsia-300";
 }
 
-function regionFlag(region: Region): string {
-  return region === "US" ? "\uD83C\uDDFA\uD83C\uDDF8" : "\uD83D\uDD37";
+function RegionFlag({ region }: { region: Region }) {
+  if (region === "US") {
+    return (
+      <svg
+        className="inline-block h-3.5 w-5 align-[-2px]"
+        viewBox="0 0 19 10"
+        role="img"
+        aria-label="United States flag"
+      >
+        <rect width="19" height="10" fill="#b22234" />
+        <rect y="1" width="19" height="1" fill="#fff" />
+        <rect y="3" width="19" height="1" fill="#fff" />
+        <rect y="5" width="19" height="1" fill="#fff" />
+        <rect y="7" width="19" height="1" fill="#fff" />
+        <rect y="9" width="19" height="1" fill="#fff" />
+        <rect width="8" height="5.5" fill="#3c3b6e" />
+        <g fill="#fff">
+          <circle cx="1" cy="1" r="0.25" />
+          <circle cx="2.5" cy="1" r="0.25" />
+          <circle cx="4" cy="1" r="0.25" />
+          <circle cx="5.5" cy="1" r="0.25" />
+          <circle cx="7" cy="1" r="0.25" />
+          <circle cx="1.75" cy="2" r="0.25" />
+          <circle cx="3.25" cy="2" r="0.25" />
+          <circle cx="4.75" cy="2" r="0.25" />
+          <circle cx="6.25" cy="2" r="0.25" />
+          <circle cx="1" cy="3" r="0.25" />
+          <circle cx="2.5" cy="3" r="0.25" />
+          <circle cx="4" cy="3" r="0.25" />
+          <circle cx="5.5" cy="3" r="0.25" />
+          <circle cx="7" cy="3" r="0.25" />
+          <circle cx="1.75" cy="4" r="0.25" />
+          <circle cx="3.25" cy="4" r="0.25" />
+          <circle cx="4.75" cy="4" r="0.25" />
+          <circle cx="6.25" cy="4" r="0.25" />
+        </g>
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      className="inline-block h-3.5 w-5 align-[-2px]"
+      viewBox="0 0 15 9"
+      role="img"
+      aria-label="Germany flag"
+    >
+      <rect width="15" height="3" fill="#000" />
+      <rect y="3" width="15" height="3" fill="#dd0000" />
+      <rect y="6" width="15" height="3" fill="#ffce00" />
+    </svg>
+  );
 }
 
 function parseDateKey(s: string): Date {
   const [y, m, d] = s.split("-").map(Number);
-  return new Date(y, m - 1, d, 12, 0, 0, 0);
+  return new Date(y, m - 1, d, 0, 0, 0, 0);
 }
 
 function addDays(d: Date, days: number): Date {
@@ -50,8 +100,10 @@ function monthGrid(anchor: Date): Date[] {
 }
 
 function isInRange(day: Date, start: string, end: string): boolean {
-  const t = day.getTime();
-  return t >= parseDateKey(start).getTime() && t <= parseDateKey(end).getTime();
+  const dayKey = new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime();
+  const startKey = parseDateKey(start).getTime();
+  const endKey = parseDateKey(end).getTime();
+  return dayKey >= startKey && dayKey <= endKey;
 }
 
 function parseResource(text: string, type: EventType): CalendarEvent[] {
@@ -242,14 +294,23 @@ export default function HolidayCalendar() {
                   : hasBYHoliday
                     ? "bg-gradient-to-r from-white/40 to-blue-200/30"
                     : "";
+            const holidayFrameClass =
+              hasUSHoliday && hasBYHoliday
+                ? "ring-2 ring-violet-500 ring-offset-1 ring-offset-white"
+                : hasUSHoliday
+                  ? "ring-2 ring-rose-500 ring-offset-1 ring-offset-white"
+                  : hasBYHoliday
+                    ? "ring-2 ring-blue-500 ring-offset-1 ring-offset-white"
+                    : "";
 
             return (
               <div
                 key={d.toISOString()}
                 className={
                   "relative min-h-28 rounded-xl border p-2 bg-white flex flex-col gap-1 overflow-hidden " +
+                  holidayFrameClass + " " +
                   (inMonth ? "" : "opacity-50 ") +
-                  (isToday ? "ring-2 ring-slate-900 " : "")
+                  (isToday ? "outline outline-2 outline-slate-900 " : "")
                 }
               >
                 <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${tileBg})`, opacity: tileBgOpacity }} />
@@ -266,15 +327,13 @@ export default function HolidayCalendar() {
                         (e.type === "special"
                           ? specialBadgeClass()
                           : e.type === "holiday"
-                            ? holidayBadgeClass(e.region)
+                            ? "bg-blue-100 text-blue-900 border border-blue-300"
                             : "bg-amber-100 text-amber-900")
                       }
                     >
                       {e.type === "special"
-                        ? `\u2728 ${e.title} (${e.region})`
-                        : e.type === "holiday"
-                          ? `${regionFlag(e.region)} ${e.title} (${e.region})`
-                          : `${e.title} (${e.region})`}
+                        ? <><span>{"\u2728 "}</span><RegionFlag region={e.region} />{" "}{e.title}</>
+                        : <><RegionFlag region={e.region} />{" "}{e.title}</>}
                     </div>
                   ))}
                   {dayEvents.length > visibleEvents.length && (
@@ -302,7 +361,7 @@ export default function HolidayCalendar() {
                 >
                   {e.type === "special" ? "Special" : e.type === "holiday" ? "Holiday" : "Vacation"}
                 </span>
-                <span> • {e.region} • {e.title} • {e.start} to {e.end}</span>
+                <span> • <RegionFlag region={e.region} /> {e.region} • {e.title} • {e.start} to {e.end}</span>
               </div>
             ))}
             {monthEvents.length === 0 && <div className="text-sm text-slate-600">No events for this month.</div>}

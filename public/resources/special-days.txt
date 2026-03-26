@@ -1,10 +1,11 @@
-﻿# region|title|start|end|imageFile
+# region|title|start|end|imageFile
 # Seasonal/special image days that should override normal seasonal tile images.
 
 # Bavaria-focused specials
 BY|Chinese New Year|2026-02-10|2026-02-10|101_special_chinese_new_year_global.png
 BY|Passover|2026-04-02|2026-04-02|109_special_passover_global.png
 BY|Easter Sunday|2026-04-05|2026-04-05|103_special_easter_global.png
+BY|13th exida Symposium - Functional Safety and Cybersecurity in the Process and Automation Industry|2026-06-09|2026-06-10|104_special_exida_symposium_global.png
 BY|Oktoberfest|2026-09-19|2026-10-04|108_special_oktoberfest_by.png
 BY|Christmas Day|2026-12-25|2026-12-25|102_special_christmas_global.png
 BY|Chinese New Year|2027-02-06|2027-02-06|101_special_chinese_new_year_global.png
@@ -17,6 +18,7 @@ BY|Christmas Day|2027-12-25|2027-12-25|102_special_christmas_global.png
 US|Chinese New Year|2026-02-10|2026-02-10|101_special_chinese_new_year_global.png
 US|Passover|2026-04-02|2026-04-02|109_special_passover_global.png
 US|Easter Sunday|2026-04-05|2026-04-05|103_special_easter_global.png
+US|13th exida Symposium - Functional Safety and Cybersecurity in the Process and Automation Industry|2026-06-09|2026-06-10|104_special_exida_symposium_global.png
 US|Independence Day|2026-07-04|2026-07-04|106_special_independence_day_us.png
 US|Halloween|2026-10-31|2026-10-31|105_special_halloween_global.png
 US|Christmas Day|2026-12-25|2026-12-25|102_special_christmas_global.png
@@ -26,3 +28,4 @@ US|Easter Sunday|2027-03-28|2027-03-28|103_special_easter_global.png
 US|Independence Day|2027-07-04|2027-07-04|106_special_independence_day_us.png
 US|Halloween|2027-10-31|2027-10-31|105_special_halloween_global.png
 US|Christmas Day|2027-12-25|2027-12-25|102_special_christmas_global.png
+
