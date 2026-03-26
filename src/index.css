@@ -1,11 +1,21 @@
 @import "tailwindcss";
 
 @page {
-  size: A4 landscape;
+  size: auto;
   margin: 8mm;
 }
 
 @media print {
+  @page calendar-landscape {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  @page calendar-portrait {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
   html,
   body {
     margin: 0 !important;
@@ -28,6 +38,14 @@
     min-height: auto !important;
     overflow: visible !important;
     background: white !important;
+  }
+
+  .calendar-print-root.calendar-print-landscape {
+    page: calendar-landscape;
+  }
+
+  .calendar-print-root.calendar-print-portrait {
+    page: calendar-portrait;
   }
 
   .calendar-print-controls {

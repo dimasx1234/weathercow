@@ -4,6 +4,7 @@ import { asset, getSeasonalImage, getSpecialDayImage, pickDeterministic } from "
 
 type EventType = "holiday" | "vacation" | "special";
 type Region = "BY" | "US";
+type CalendarLocale = "de-DE" | "en-US";
 
 type CalendarEvent = {
   id: string;
@@ -81,11 +82,16 @@ function addDays(d: Date, days: number): Date {
 
 function monthGrid(anchor: Date): Date[] {
   const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+  const last = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
   const start = new Date(first);
   const startDay = (first.getDay() + 6) % 7;
+  const end = new Date(last);
+  const endDay = (last.getDay() + 6) % 7;
   start.setDate(first.getDate() - startDay);
+  end.setDate(last.getDate() + (6 - endDay));
   const out: Date[] = [];
-  for (let i = 0; i < 42; i += 1) out.push(addDays(start, i));
+  const days = Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+  for (let i = 0; i < days; i += 1) out.push(addDays(start, i));
   return out;
 }
 
@@ -144,6 +150,11 @@ export default function HolidayCalendar() {
   const [cursor, setCursor] = useState(() => new Date());
   const [showBY, setShowBY] = useState(true);
   const [showUS, setShowUS] = useState(true);
+  const [locale, setLocale] = useState<CalendarLocale>(() =>
+    typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("de")
+      ? "de-DE"
+      : "en-US"
+  );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -154,6 +165,10 @@ export default function HolidayCalendar() {
   const pageBgOpacity = Math.min(1, Math.max(0, APP_SETTINGS.calendarPageBackgroundOpacity));
   const tileBgOpacity = Math.min(1, Math.max(0, APP_SETTINGS.calendarTileImageOpacity));
   const tileOverlayOpacity = Math.min(1, Math.max(0, APP_SETTINGS.calendarTileOverlayOpacity));
+  const printOrientation =
+    APP_SETTINGS.calendarPrintOrientation === "portrait" || APP_SETTINGS.calendarPrintOrientation === "landscape"
+      ? APP_SETTINGS.calendarPrintOrientation
+      : "auto";
   const printVars = {
     "--print-tile-bg-opacity": Math.min(1, Math.max(0, APP_SETTINGS.calendarPrintTileImageOpacity)),
     "--print-tile-overlay-opacity": Math.min(1, Math.max(0, APP_SETTINGS.calendarPrintTileOverlayOpacity)),
@@ -204,6 +219,12 @@ export default function HolidayCalendar() {
   );
 
   const grid = useMemo(() => monthGrid(cursor), [cursor]);
+  const weekdayHeaders = useMemo(() => {
+    const mondayAnchor = new Date(2024, 0, 1);
+    return Array.from({ length: 7 }).map((_, idx) =>
+      addDays(mondayAnchor, idx).toLocaleDateString(locale, { weekday: "short" })
+    );
+  }, [locale]);
 
   const monthEvents = useMemo(() => {
     return filteredEvents.filter((e) => {
@@ -218,7 +239,10 @@ export default function HolidayCalendar() {
   }, [filteredEvents, month, year]);
 
   return (
-    <div className="calendar-print-root relative min-h-screen w-full overflow-hidden bg-stone-100 text-slate-900" style={printVars}>
+    <div
+      className={`calendar-print-root calendar-print-${printOrientation} relative min-h-screen w-full overflow-hidden bg-stone-100 text-slate-900`}
+      style={printVars}
+    >
       <div className="calendar-page-bg absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${pageBg})`, opacity: pageBgOpacity }} />
       <div className="calendar-page-overlay absolute inset-0 bg-stone-100/78" />
 
@@ -237,7 +261,7 @@ export default function HolidayCalendar() {
         </div>
 
         <div className="mb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="calendar-print-month text-lg font-medium">{cursor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</div>
+          <div className="calendar-print-month text-lg font-medium">{cursor.toLocaleDateString(locale, { month: "long", year: "numeric" })}</div>
           <div className="calendar-print-controls flex items-center gap-3 text-sm">
             <label className="inline-flex items-center gap-1">
               <input type="checkbox" checked={showBY} onChange={(e) => setShowBY(e.target.checked)} />
@@ -247,6 +271,20 @@ export default function HolidayCalendar() {
               <input type="checkbox" checked={showUS} onChange={(e) => setShowUS(e.target.checked)} />
               <span>United States (US)</span>
             </label>
+            <div className="inline-flex items-center rounded-xl border overflow-hidden">
+              <button
+                className={`px-2 py-0.5 ${locale === "de-DE" ? "bg-slate-900 text-white" : "bg-white text-slate-700"}`}
+                onClick={() => setLocale("de-DE")}
+              >
+                DE
+              </button>
+              <button
+                className={`px-2 py-0.5 ${locale === "en-US" ? "bg-slate-900 text-white" : "bg-white text-slate-700"}`}
+                onClick={() => setLocale("en-US")}
+              >
+                US
+              </button>
+            </div>
           </div>
         </div>
 
@@ -257,7 +295,7 @@ export default function HolidayCalendar() {
         )}
 
         <div className="grid grid-cols-7 text-xs font-semibold text-slate-600 mb-1">
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((w) => (
+          {weekdayHeaders.map((w) => (
             <div key={w} className="px-2 py-1">{w}</div>
           ))}
         </div>

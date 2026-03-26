@@ -1,5 +1,5 @@
 export const APP_SETTINGS = {
-  debugBackgroundPanel: true,
+  debugBackgroundPanel: false,
   seasonClockStrategy: "season-time-first",
   weatherClockStrategy: "weather-first",
   calendarStrategy: "season-time-first",
@@ -11,4 +11,5 @@ export const APP_SETTINGS = {
   calendarPrintTileImageOpacity: 0.62,
   calendarPrintTileOverlayOpacity: 0.26,
   calendarPrintTileMinHeightPx: 86,
+  calendarPrintOrientation: "auto" as "auto" | "portrait" | "landscape",
 } as const;
