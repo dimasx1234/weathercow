@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "prepare:images": "node scripts/generate-image-manifest.mjs",
-    "dev": "npm run prepare:images && vite",
-    "build": "npm run prepare:images && tsc -b && vite build",
+    "dev": "npm run prepare:images && npm run prepare:small-images && vite",
+    "build": "npm run prepare:images && npm run prepare:small-images && tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare:small-images": "node scripts/generate-small-forecast-images.mjs"
   },
   "dependencies": {
     "react": "^19.1.1",
@@ -29,6 +30,7 @@
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
     "postcss": "^8.5.6",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4.1.15",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",

@@ -1,4 +1,4 @@
-import { IMAGE_FILES } from "./imageManifest";
+﻿import { IMAGE_FILES } from "./imageManifest";
 
 export type PartOfDay =
   | "morning"
@@ -25,6 +25,7 @@ export const OPENWEATHER_KEY: string =
   import.meta.env.VITE_OPENWEATHER_KEY ?? "7b9b2146c3bae897733dce1b616e7b4d";
 
 export const asset = (file: string) => `${import.meta.env.BASE_URL}images/${file}`;
+export const smallAsset = (file: string) => `${import.meta.env.BASE_URL}images/small/${file}`;
 
 const partAliases: Array<[PartOfDay, RegExp]> = [
   ["earlyNight", /early_night/],
@@ -215,6 +216,20 @@ export function pickDeterministic(list: string[] | undefined, date: Date, salt =
   return list[idx];
 }
 
+export function getWeatherImage(weatherMain: string | undefined, when: Date): string | null {
+  if (!weatherMain) return null;
+  return pickDeterministic(WEATHER_IMAGES[weatherMain], when, when.getHours());
+}
+
+export function getSeasonalImage(when: Date): string {
+  const season = getSeason(when);
+  return pickDeterministic(SEASONAL_IMAGES[season], when, 7) ?? PART_OF_DAY_IMAGES.night;
+}
+
+export function getSmallForecastImageUrl(imageUrl: string): string {
+  return smallAsset(imageFileFromUrl(imageUrl));
+}
+
 export function selectBackgroundImage(input: {
   now: Date;
   weatherMain?: string;
@@ -344,3 +359,4 @@ export function selectBackgroundImageDetails(input: {
     weatherMain,
   };
 }
+
