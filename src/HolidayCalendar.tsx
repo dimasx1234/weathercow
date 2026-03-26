@@ -3,7 +3,7 @@ import { APP_SETTINGS } from "./appSettings";
 import { asset, getSeasonalImage, getSpecialDayImage, pickDeterministic } from "./weatherConfig";
 
 type EventType = "holiday" | "vacation" | "special";
-type Region = "BY" | "US";
+type Region = "BY" | "US" | "ALL" | "GLOBAL";
 type CalendarLocale = "de-DE" | "en-US";
 
 type CalendarEvent = {
@@ -26,6 +26,9 @@ function specialBadgeClass(): string {
 }
 
 function RegionFlag({ region }: { region: Region }) {
+  if (region === "GLOBAL" || region === "ALL") {
+    return <span className="inline-block align-[-2px]" aria-label="Global">🌍</span>;
+  }
   if (region === "US") {
     return (
       <svg className="inline-block h-3.5 w-5 align-[-2px]" viewBox="0 0 19 10" role="img" aria-label="United States flag">
@@ -74,6 +77,33 @@ function parseDateKey(s: string): Date {
   return new Date(y, m - 1, d, 0, 0, 0, 0);
 }
 
+function isAbsoluteDate(s: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
+
+function isAnnualDate(s: string): boolean {
+  return /^\d{2}-\d{2}$/.test(s);
+}
+
+function parseAnnualDateKey(s: string): { month: number; day: number } {
+  const [m, d] = s.split("-").map(Number);
+  return { month: m, day: d };
+}
+
+function dateToMonthDayNumber(date: Date): number {
+  return (date.getMonth() + 1) * 100 + date.getDate();
+}
+
+function annualRangeContainsDay(day: Date, start: string, end: string): boolean {
+  const todayMd = dateToMonthDayNumber(day);
+  const s = parseAnnualDateKey(start);
+  const e = parseAnnualDateKey(end);
+  const startMd = s.month * 100 + s.day;
+  const endMd = e.month * 100 + e.day;
+  if (startMd <= endMd) return todayMd >= startMd && todayMd <= endMd;
+  return todayMd >= startMd || todayMd <= endMd;
+}
+
 function addDays(d: Date, days: number): Date {
   const out = new Date(d);
   out.setDate(out.getDate() + days);
@@ -96,10 +126,24 @@ function monthGrid(anchor: Date): Date[] {
 }
 
 function isInRange(day: Date, start: string, end: string): boolean {
+  if (isAnnualDate(start) && isAnnualDate(end)) {
+    return annualRangeContainsDay(day, start, end);
+  }
   const dayKey = new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime();
   const startKey = parseDateKey(start).getTime();
   const endKey = parseDateKey(end).getTime();
   return dayKey >= startKey && dayKey <= endKey;
+}
+
+function annualRangeOverlapsMonth(start: string, end: string, year: number, monthIndexZeroBased: number): boolean {
+  const startMd = Number(start.replace("-", ""));
+  const endMd = Number(end.replace("-", ""));
+  const month = monthIndexZeroBased + 1;
+  const monthStartMd = month * 100 + 1;
+  const monthEndMd = month * 100 + new Date(year, month, 0).getDate();
+  const overlaps = (aStart: number, aEnd: number, bStart: number, bEnd: number) => aStart <= bEnd && bStart <= aEnd;
+  if (startMd <= endMd) return overlaps(startMd, endMd, monthStartMd, monthEndMd);
+  return overlaps(startMd, 1231, monthStartMd, monthEndMd) || overlaps(101, endMd, monthStartMd, monthEndMd);
 }
 
 function parseResource(text: string, type: EventType): CalendarEvent[] {
@@ -113,9 +157,11 @@ function parseResource(text: string, type: EventType): CalendarEvent[] {
     if (parts.length < 4) continue;
     const [regionRaw, title, start, end, imageFile] = parts;
 
-    const validRegion = regionRaw === "BY" || regionRaw === "US";
-    const validDate = /^\d{4}-\d{2}-\d{2}$/;
-    if (!validRegion || !validDate.test(start) || !validDate.test(end)) continue;
+    const validRegion = regionRaw === "BY" || regionRaw === "US" || regionRaw === "GLOBAL" || regionRaw === "ALL";
+    const validDatePair =
+      (isAbsoluteDate(start) && isAbsoluteDate(end)) ||
+      (isAnnualDate(start) && isAnnualDate(end));
+    if (!validRegion || !validDatePair) continue;
 
     out.push({
       id: `${type}-${regionRaw}-${title}-${start}-${end}-${i}`,
@@ -214,7 +260,7 @@ export default function HolidayCalendar() {
   }, [showBY, showUS]);
 
   const filteredEvents = useMemo(
-    () => events.filter((e) => activeRegions.includes(e.region)),
+    () => events.filter((e) => e.region === "GLOBAL" || e.region === "ALL" || activeRegions.includes(e.region)),
     [events, activeRegions]
   );
 
@@ -228,6 +274,9 @@ export default function HolidayCalendar() {
 
   const monthEvents = useMemo(() => {
     return filteredEvents.filter((e) => {
+      if (isAnnualDate(e.start) && isAnnualDate(e.end)) {
+        return annualRangeOverlapsMonth(e.start, e.end, year, month);
+      }
       const s = parseDateKey(e.start);
       const en = parseDateKey(e.end);
       return (
