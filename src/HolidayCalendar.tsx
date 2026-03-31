@@ -174,7 +174,7 @@ const WORD_CLOCK_VARIANTS: WordClockVariant[] = [
       [
         { id: "bez", label: "БЕЗ" },
         { id: "pyat-min", label: "ПЯТЬ" },
-        { id: "minut", label: "МИНУТ" },
+        { id: "", label: "" },
         { id: "dvadcat-min", label: "ДВАДЦАТЬ" },
         { id: "chetvert", label: "ЧЕТВЕРТЬ" },
         { id: "desyat-min", label: "ДЕСЯТЬ" },
@@ -183,23 +183,39 @@ const WORD_CLOCK_VARIANTS: WordClockVariant[] = [
         { id: "posle", label: "ПОСЛЕ" },
         { id: "poloviny", label: "ПОЛОВИНЫ" },
         { id: "rovno", label: "РОВНО" },
+        { id: "minut", label: "МИНУТ" },
         { id: "odin", label: "ОДИН" },
         { id: "dva", label: "ДВА" },
-        { id: "tri", label: "ТРИ" },
       ],
       [
+        { id: "tri", label: "ТРИ" },
         { id: "chetyre", label: "ЧЕТЫРЕ" },
         { id: "pyat-hour", label: "ПЯТЬ" },
         { id: "shest", label: "ШЕСТЬ" },
         { id: "sem", label: "СЕМЬ" },
         { id: "vosem", label: "ВОСЕМЬ" },
-        { id: "devyat", label: "ДЕВЯТЬ" },
       ],
       [
+        { id: "devyat", label: "ДЕВЯТЬ" },
         { id: "desyat-hour", label: "ДЕСЯТЬ" },
         { id: "odinnadtsat", label: "ОДИННАДЦАТЬ" },
         { id: "dvenadtsat", label: "ДВЕНАДЦАТЬ" },
-        { id: "", label: "" },
+        { id: "pervogo", label: "ПЕРВОГО" },
+        { id: "vtorogo", label: "ВТОРОГО" },
+      ],
+      [
+        { id: "tretego", label: "ТРЕТЬЕГО" },
+        { id: "chetvertogo", label: "ЧЕТВЕРТОГО" },
+        { id: "pyatogo", label: "ПЯТОГО" },
+        { id: "shestogo", label: "ШЕСТОГО" },
+        { id: "sedmogo", label: "СЕДЬМОГО" },
+        { id: "vosemogo", label: "ВОСЬМОГО" },
+      ],
+      [
+        { id: "devyatogo", label: "ДЕВЯТОГО" },
+        { id: "desyatogo", label: "ДЕСЯТОГО" },
+        { id: "odinnadtsatogo", label: "ОДИННАДЦАТОГО" },
+        { id: "dvenadtsatogo", label: "ДВЕНАДЦАТОГО" },
         { id: "", label: "" },
         { id: "", label: "" },
       ],
@@ -250,6 +266,21 @@ const WORD_CLOCK_HOUR_IDS: Record<WordClockLanguage, Record<number, string>> = {
     11: "odinnadtsat",
     12: "dvenadtsat",
   },
+};
+
+const RUSSIAN_WORD_CLOCK_HOUR_GENITIVE_IDS: Record<number, string> = {
+  1: "pervogo",
+  2: "vtorogo",
+  3: "tretego",
+  4: "chetvertogo",
+  5: "pyatogo",
+  6: "shestogo",
+  7: "sedmogo",
+  8: "vosemogo",
+  9: "devyatogo",
+  10: "desyatogo",
+  11: "odinnadtsatogo",
+  12: "dvenadtsatogo",
 };
 
 function getWordClockActiveWords(language: WordClockLanguage, date: Date): Set<string> {
@@ -368,6 +399,7 @@ function getWordClockActiveWords(language: WordClockLanguage, date: Date): Set<s
   }
 
   if (language === "ru") {
+    const nextHourGenitiveId = RUSSIAN_WORD_CLOCK_HOUR_GENITIVE_IDS[hour === 12 ? 1 : hour + 1];
     if (rounded === 0) {
       active.add(currentHourId);
       active.add("rovno");
@@ -376,41 +408,35 @@ function getWordClockActiveWords(language: WordClockLanguage, date: Date): Set<s
     if (rounded === 5) {
       active.add("pyat-min");
       active.add("minut");
-      active.add("posle");
-      active.add(currentHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
     if (rounded === 10) {
       active.add("desyat-min");
       active.add("minut");
-      active.add("posle");
-      active.add(currentHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
     if (rounded === 15) {
       active.add("chetvert");
-      active.add("posle");
-      active.add(currentHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
     if (rounded === 20) {
       active.add("dvadcat-min");
       active.add("minut");
-      active.add("posle");
-      active.add(currentHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
     if (rounded === 25) {
-      active.add("pyat-min");
-      active.add("minut");
       active.add("bez");
       active.add("poloviny");
-      active.add(nextHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
     if (rounded === 30) {
       active.add("poloviny");
-      active.add(nextHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
     if (rounded === 35) {
@@ -418,34 +444,34 @@ function getWordClockActiveWords(language: WordClockLanguage, date: Date): Set<s
       active.add("minut");
       active.add("posle");
       active.add("poloviny");
-      active.add(nextHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
     if (rounded === 40) {
       active.add("dvadcat-min");
       active.add("minut");
       active.add("bez");
-      active.add(nextHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
     if (rounded === 45) {
       active.add("chetvert");
       active.add("bez");
-      active.add(nextHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
     if (rounded === 50) {
       active.add("desyat-min");
       active.add("minut");
       active.add("bez");
-      active.add(nextHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
     if (rounded === 55) {
       active.add("pyat-min");
       active.add("minut");
       active.add("bez");
-      active.add(nextHourId);
+      active.add(nextHourGenitiveId);
       return active;
     }
   }
@@ -842,7 +868,46 @@ export default function HolidayCalendar() {
             <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url(${wordClockBg})` }} />
             <div className="absolute inset-0 bg-slate-950/55" />
             <div className="relative z-10 grid h-full w-full grid-rows-3 gap-3 p-2 sm:p-4">
-              {WORD_CLOCK_VARIANTS.map((variant) => {
+              {WORD_CLOCK_VARIANTS.filter((variant) => variant.id !== "ru").map((variant) => {
+                const activeWordIds = getWordClockActiveWords(variant.id, wordClockNow);
+                return (
+                  <div key={variant.id} className="relative h-full overflow-hidden rounded-3xl bg-slate-950/20">
+                    <div className="relative z-10 h-full">
+                      <div
+                        className="grid h-full w-full grid-cols-6 gap-3 p-4 sm:p-6"
+                        style={{ gridAutoRows: "minmax(0, 1fr)" }}
+                      >
+                        {variant.grid.flat().map(({ id, label }, idx) => {
+                          const active = id ? activeWordIds.has(id) : false;
+                          return (
+                            <div
+                              key={`${variant.id}-${idx}-${id}`}
+                              className={`flex min-h-0 items-center justify-center w-full ${
+                                active ? "text-white opacity-100 drop-shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-slate-400 opacity-60"
+                              } text-[clamp(1.4rem,3vw,3rem)] font-semibold uppercase leading-none tracking-[0.18em] transition`}
+                            >
+                              {label}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section
+          className="overflow-hidden bg-transparent text-white"
+          style={{ breakBefore: "page", pageBreakBefore: "always", minHeight: "100vh", height: "100vh" }}
+        >
+          <div className="relative h-full">
+            <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url(${wordClockBg})` }} />
+            <div className="absolute inset-0 bg-slate-950/55" />
+            <div className="relative z-10 grid h-full w-full grid-rows-1 gap-3 p-2 sm:p-4">
+              {WORD_CLOCK_VARIANTS.filter((variant) => variant.id === "ru").map((variant) => {
                 const activeWordIds = getWordClockActiveWords(variant.id, wordClockNow);
                 return (
                   <div key={variant.id} className="relative h-full overflow-hidden rounded-3xl bg-slate-950/20">
