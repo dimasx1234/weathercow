@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { APP_SETTINGS } from "./appSettings";
-import { asset, getSeasonalImage, getSpecialDayImage, pickDeterministic } from "./weatherConfig";
+import { asset, getSeasonalImage, getSpecialDayImage, pickDeterministic, selectBackgroundImageDetails } from "./weatherConfig";
 
 type EventType = "holiday" | "vacation" | "special";
 type Region = "BY" | "US" | "ALL" | "GLOBAL";
@@ -75,6 +75,382 @@ function RegionFlag({ region }: { region: Region }) {
 function parseDateKey(s: string): Date {
   const [y, m, d] = s.split("-").map(Number);
   return new Date(y, m - 1, d, 0, 0, 0, 0);
+}
+
+type WordClockLanguage = "en" | "de" | "ru";
+
+type WordClockCell = {
+  id: string;
+  label: string;
+};
+
+type WordClockVariant = {
+  id: WordClockLanguage;
+  label: string;
+  grid: WordClockCell[][];
+};
+
+const WORD_CLOCK_VARIANTS: WordClockVariant[] = [
+  {
+    id: "en",
+    label: "ENGLISH",
+    grid: [
+      [
+        { id: "it", label: "IT" },
+        { id: "is", label: "IS" },
+        { id: "half", label: "HALF" },
+        { id: "ten-min", label: "TEN" },
+        { id: "quarter", label: "QUARTER" },
+        { id: "twenty-min", label: "TWENTY" },
+      ],
+      [
+        { id: "five-min", label: "FIVE" },
+        { id: "to", label: "TO" },
+        { id: "past", label: "PAST" },
+        { id: "one", label: "ONE" },
+        { id: "two", label: "TWO" },
+        { id: "three", label: "THREE" },
+      ],
+      [
+        { id: "four", label: "FOUR" },
+        { id: "five-hour", label: "FIVE" },
+        { id: "six", label: "SIX" },
+        { id: "seven", label: "SEVEN" },
+        { id: "eight", label: "EIGHT" },
+        { id: "nine", label: "NINE" },
+      ],
+      [
+        { id: "ten-hour", label: "TEN" },
+        { id: "eleven", label: "ELEVEN" },
+        { id: "twelve", label: "TWELVE" },
+        { id: "oclock", label: "O'CLOCK" },
+        { id: "", label: "" },
+        { id: "", label: "" },
+      ],
+    ],
+  },
+  {
+    id: "de",
+    label: "GERMAN",
+    grid: [
+      [
+        { id: "es", label: "ES" },
+        { id: "ist", label: "IST" },
+        { id: "fuenf-min", label: "FÜNF" },
+        { id: "zehn-min", label: "ZEHN" },
+        { id: "viertel", label: "VIERTEL" },
+        { id: "zwanzig-min", label: "ZWANZIG" },
+      ],
+      [
+        { id: "nach", label: "NACH" },
+        { id: "vor", label: "VOR" },
+        { id: "halb", label: "HALB" },
+        { id: "elf", label: "ELF" },
+        { id: "eins", label: "EINS" },
+        { id: "zwei", label: "ZWEI" },
+      ],
+      [
+        { id: "drei", label: "DREI" },
+        { id: "vier", label: "VIER" },
+        { id: "fuenf-hour", label: "FÜNF" },
+        { id: "sechs", label: "SECHS" },
+        { id: "sieben", label: "SIEBEN" },
+        { id: "", label: "" },
+      ],
+      [
+        { id: "acht", label: "ACHT" },
+        { id: "neun", label: "NEUN" },
+        { id: "zehn-hour", label: "ZEHN" },
+        { id: "elf-hour", label: "ELF" },
+        { id: "zwolf", label: "ZWÖLF" },
+        { id: "uhr", label: "UHR" },
+      ],
+    ],
+  },
+  {
+    id: "ru",
+    label: "RUSSIAN",
+    grid: [
+      [
+        { id: "bez", label: "БЕЗ" },
+        { id: "pyat-min", label: "ПЯТЬ" },
+        { id: "minut", label: "МИНУТ" },
+        { id: "dvadcat-min", label: "ДВАДЦАТЬ" },
+        { id: "chetvert", label: "ЧЕТВЕРТЬ" },
+        { id: "desyat-min", label: "ДЕСЯТЬ" },
+      ],
+      [
+        { id: "posle", label: "ПОСЛЕ" },
+        { id: "poloviny", label: "ПОЛОВИНЫ" },
+        { id: "rovno", label: "РОВНО" },
+        { id: "odin", label: "ОДИН" },
+        { id: "dva", label: "ДВА" },
+        { id: "tri", label: "ТРИ" },
+      ],
+      [
+        { id: "chetyre", label: "ЧЕТЫРЕ" },
+        { id: "pyat-hour", label: "ПЯТЬ" },
+        { id: "shest", label: "ШЕСТЬ" },
+        { id: "sem", label: "СЕМЬ" },
+        { id: "vosem", label: "ВОСЕМЬ" },
+        { id: "devyat", label: "ДЕВЯТЬ" },
+      ],
+      [
+        { id: "desyat-hour", label: "ДЕСЯТЬ" },
+        { id: "odinnadtsat", label: "ОДИННАДЦАТЬ" },
+        { id: "dvenadtsat", label: "ДВЕНАДЦАТЬ" },
+        { id: "", label: "" },
+        { id: "", label: "" },
+        { id: "", label: "" },
+      ],
+    ],
+  },
+];
+
+const WORD_CLOCK_HOUR_IDS: Record<WordClockLanguage, Record<number, string>> = {
+  en: {
+    1: "one",
+    2: "two",
+    3: "three",
+    4: "four",
+    5: "five-hour",
+    6: "six",
+    7: "seven",
+    8: "eight",
+    9: "nine",
+    10: "ten-hour",
+    11: "eleven",
+    12: "twelve",
+  },
+  de: {
+    1: "eins",
+    2: "zwei",
+    3: "drei",
+    4: "vier",
+    5: "fuenf-hour",
+    6: "sechs",
+    7: "sieben",
+    8: "acht",
+    9: "neun",
+    10: "zehn-hour",
+    11: "elf-hour",
+    12: "zwolf",
+  },
+  ru: {
+    1: "odin",
+    2: "dva",
+    3: "tri",
+    4: "chetyre",
+    5: "pyat-hour",
+    6: "shest",
+    7: "sem",
+    8: "vosem",
+    9: "devyat",
+    10: "desyat-hour",
+    11: "odinnadtsat",
+    12: "dvenadtsat",
+  },
+};
+
+function getWordClockActiveWords(language: WordClockLanguage, date: Date): Set<string> {
+  const active = new Set<string>([]);
+  const hourRaw = date.getHours() % 12;
+  let hour = hourRaw === 0 ? 12 : hourRaw;
+  const minute = date.getMinutes();
+  let rounded = Math.round(minute / 5) * 5;
+
+  if (rounded === 60) {
+    rounded = 0;
+    hour = (hour % 12) + 1;
+  }
+
+  const currentHourId = WORD_CLOCK_HOUR_IDS[language][hour];
+  const nextHourId = WORD_CLOCK_HOUR_IDS[language][hour === 12 ? 1 : hour + 1];
+
+  if (language === "en") {
+    active.add("it");
+    active.add("is");
+    if (rounded === 0) {
+      active.add(currentHourId);
+      active.add("oclock");
+      return active;
+    }
+    if (rounded === 15) {
+      active.add("quarter");
+      active.add("past");
+      active.add(currentHourId);
+      return active;
+    }
+    if (rounded === 30) {
+      active.add("half");
+      active.add("past");
+      active.add(currentHourId);
+      return active;
+    }
+    if (rounded === 45) {
+      active.add("quarter");
+      active.add("to");
+      active.add(nextHourId);
+      return active;
+    }
+    if (rounded < 30) {
+      if (rounded === 5) active.add("five-min");
+      if (rounded === 10) active.add("ten-min");
+      if (rounded === 20) active.add("twenty-min");
+      if (rounded === 25) {
+        active.add("twenty-min");
+        active.add("five-min");
+      }
+      active.add("past");
+      active.add(currentHourId);
+      return active;
+    }
+    const minutesTo = 60 - rounded;
+    if (minutesTo === 5) active.add("five-min");
+    if (minutesTo === 10) active.add("ten-min");
+    if (minutesTo === 20) active.add("twenty-min");
+    if (minutesTo === 25) {
+      active.add("twenty-min");
+      active.add("five-min");
+    }
+    active.add("to");
+    active.add(nextHourId);
+    return active;
+  }
+
+  if (language === "de") {
+    active.add("es");
+    active.add("ist");
+    if (rounded === 0) {
+      active.add(currentHourId);
+      active.add("uhr");
+      return active;
+    }
+    if (rounded === 15) {
+      active.add("viertel");
+      active.add("nach");
+      active.add(currentHourId);
+      return active;
+    }
+    if (rounded === 30) {
+      active.add("halb");
+      active.add(nextHourId);
+      return active;
+    }
+    if (rounded === 45) {
+      active.add("viertel");
+      active.add("vor");
+      active.add(nextHourId);
+      return active;
+    }
+    if (rounded < 30) {
+      if (rounded === 5) active.add("fuenf-min");
+      if (rounded === 10) active.add("zehn-min");
+      if (rounded === 20) active.add("zwanzig-min");
+      if (rounded === 25) {
+        active.add("fuenf-min");
+        active.add("vor");
+        active.add("halb");
+        active.add(nextHourId);
+        return active;
+      }
+      active.add("nach");
+      active.add(currentHourId);
+      return active;
+    }
+    const minutesTo = 60 - rounded;
+    if (minutesTo === 5) active.add("fuenf-min");
+    if (minutesTo === 10) active.add("zehn-min");
+    if (minutesTo === 20) active.add("zwanzig-min");
+    active.add("vor");
+    active.add(nextHourId);
+    return active;
+  }
+
+  if (language === "ru") {
+    if (rounded === 0) {
+      active.add(currentHourId);
+      active.add("rovno");
+      return active;
+    }
+    if (rounded === 5) {
+      active.add("pyat-min");
+      active.add("minut");
+      active.add("posle");
+      active.add(currentHourId);
+      return active;
+    }
+    if (rounded === 10) {
+      active.add("desyat-min");
+      active.add("minut");
+      active.add("posle");
+      active.add(currentHourId);
+      return active;
+    }
+    if (rounded === 15) {
+      active.add("chetvert");
+      active.add("posle");
+      active.add(currentHourId);
+      return active;
+    }
+    if (rounded === 20) {
+      active.add("dvadcat-min");
+      active.add("minut");
+      active.add("posle");
+      active.add(currentHourId);
+      return active;
+    }
+    if (rounded === 25) {
+      active.add("pyat-min");
+      active.add("minut");
+      active.add("bez");
+      active.add("poloviny");
+      active.add(nextHourId);
+      return active;
+    }
+    if (rounded === 30) {
+      active.add("poloviny");
+      active.add(nextHourId);
+      return active;
+    }
+    if (rounded === 35) {
+      active.add("pyat-min");
+      active.add("minut");
+      active.add("posle");
+      active.add("poloviny");
+      active.add(nextHourId);
+      return active;
+    }
+    if (rounded === 40) {
+      active.add("dvadcat-min");
+      active.add("minut");
+      active.add("bez");
+      active.add(nextHourId);
+      return active;
+    }
+    if (rounded === 45) {
+      active.add("chetvert");
+      active.add("bez");
+      active.add(nextHourId);
+      return active;
+    }
+    if (rounded === 50) {
+      active.add("desyat-min");
+      active.add("minut");
+      active.add("bez");
+      active.add(nextHourId);
+      return active;
+    }
+    if (rounded === 55) {
+      active.add("pyat-min");
+      active.add("minut");
+      active.add("bez");
+      active.add(nextHourId);
+      return active;
+    }
+  }
+
+  return active;
 }
 
 function isAbsoluteDate(s: string): boolean {
@@ -287,6 +663,13 @@ export default function HolidayCalendar() {
     });
   }, [filteredEvents, month, year]);
 
+  const wordClockNow = new Date();
+  const wordClockSelection = selectBackgroundImageDetails({
+    now: wordClockNow,
+    strategy: APP_SETTINGS.calendarStrategy,
+  });
+  const wordClockBg = wordClockSelection.image;
+
   return (
     <div
       className={`calendar-print-root calendar-print-${printOrientation} relative min-h-screen w-full overflow-hidden bg-stone-100 text-slate-900`}
@@ -448,6 +831,45 @@ export default function HolidayCalendar() {
               </div>
             ))}
             {monthEvents.length === 0 && <div className="text-sm text-slate-600">No events for this month.</div>}
+          </div>
+        </section>
+
+        <section
+          className="overflow-hidden bg-transparent text-white"
+          style={{ breakBefore: "page", pageBreakBefore: "always", minHeight: "100vh", height: "100vh" }}
+        >
+          <div className="relative h-full">
+            <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url(${wordClockBg})` }} />
+            <div className="absolute inset-0 bg-slate-950/55" />
+            <div className="relative z-10 grid h-full w-full grid-rows-3 gap-3 p-2 sm:p-4">
+              {WORD_CLOCK_VARIANTS.map((variant) => {
+                const activeWordIds = getWordClockActiveWords(variant.id, wordClockNow);
+                return (
+                  <div key={variant.id} className="relative h-full overflow-hidden rounded-3xl bg-slate-950/20">
+                    <div className="relative z-10 h-full">
+                      <div
+                        className="grid h-full w-full grid-cols-6 gap-3 p-4 sm:p-6"
+                        style={{ gridAutoRows: "minmax(0, 1fr)" }}
+                      >
+                        {variant.grid.flat().map(({ id, label }, idx) => {
+                          const active = id ? activeWordIds.has(id) : false;
+                          return (
+                            <div
+                              key={`${variant.id}-${idx}-${id}`}
+                              className={`flex min-h-0 items-center justify-center w-full ${
+                                active ? "text-white opacity-100 drop-shadow-[0_0_20px_rgba(255,255,255,0.25)]" : "text-slate-400 opacity-60"
+                              } text-[clamp(1.4rem,3vw,3rem)] font-semibold uppercase leading-none tracking-[0.18em] transition`}
+                            >
+                              {label}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
       </div>
